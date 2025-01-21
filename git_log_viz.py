@@ -1,0 +1,177 @@
+import subprocess
+import csv
+import re
+import plotly.express as px
+import plotly.figure_factory as ff
+import pandas as pd
+from datetime import datetime
+
+# !!!Action required - put path to Bash command
+command = "cd ./git_repos/neo-go ; git log "
+
+result = subprocess.run(command, shell=True, text=True, capture_output=True)
+
+# Pattern to extract data
+pattern = r"commit\s+([a-f0-9]+)\nAuthor:\s+(.*?)\nDate:\s+(.*)"
+
+matches = re.findall(pattern, result.stdout, re.MULTILINE)
+
+# Write to CSV file
+with open("result/git_log.csv", mode="w", newline="", encoding="utf-8") as csvfile:
+    writer = csv.writer(csvfile)
+    writer.writerow(["commit", "author", "date"])
+    writer.writerows(matches)
+
+df = pd.read_csv('result/git_log.csv')
+
+df["date"] = pd.to_datetime(df["date"], utc=True)
+# Creation new columns
+df["year"] = df["date"].dt.year
+df["year"] = df["year"].astype(int)
+
+df["month_year"] = df["date"].dt.strftime('%Y-%m')
+df['month_year'] = pd.to_datetime(df['month_year'], format='%Y-%m')
+
+# Extract emails using regular expression
+df["email"] = df["author"].str.extract(r'<([^>]+)>')
+
+# Building line chart #1 by years.
+
+# Group by 'year' and count the 'commit' occurrences
+yearly_counts = df.groupby('year')['commit'].count().reset_index()
+yearly_counts.columns = ['year', 'commit_count']
+fig1 = px.line(yearly_counts, x='year', y='commit_count', title='Count of commits by Year', markers=True)
+
+fig1.update_layout(
+    title_x=0.5,
+    xaxis=dict(
+        tickmode='linear',  # Ensure linear ticks (e.g., 2018, 2019, ...)
+        tick0=yearly_counts['year'].min(),  # Start ticks from the minimum year
+        dtick=1  # Interval between ticks
+    )
+)
+
+fig1_json = fig1.to_json()
+
+# !!!Action required - put number of years instead of 5 if needed
+# Building line chart #2 by last X years by month.
+
+# Group by 'month_year' and count the 'commit' occurrences
+cutoff_date = pd.to_datetime(f"{datetime.now().year - 5}-01-01")
+filtered_df = df[df['month_year'] >= cutoff_date]
+monthly_counts = filtered_df.groupby(['month_year'])['commit'].count().reset_index()
+monthly_counts.columns = ['month_year', 'commit_count']
+fig2 = px.line(monthly_counts, x='month_year', y='commit_count', title='Count of commits by Month', markers=True)
+
+fig2.update_layout(
+    title_x=0.5,
+    xaxis_tickformat='%Y-%B',
+    xaxis=dict(
+        tickmode='linear',
+        tick0=monthly_counts['month_year'].min(),
+        dtick='M1'
+    )
+)
+
+fig2_json = fig2.to_json()
+
+# Building graph table #3 with top authors
+
+# Grouped by year and email and count the commits
+commit_counts = df.groupby(['year', 'email']).size().reset_index(name='commit_count')
+total_commits_by_email = commit_counts.groupby('email')['commit_count'].sum()
+top_10_emails = total_commits_by_email.sort_values(ascending=False).head(10)
+
+table_data = {
+    "Rank": list(range(1, len(top_10_emails) + 1)),
+    "Email": top_10_emails.index.tolist(),
+    "Total Commits": top_10_emails.values.tolist()
+}
+
+fig3 = ff.create_table([list(table_data.keys())] + list(zip(*table_data.values())))
+
+fig3.update_layout(
+    title="Top-10 authors",
+    title_x=0.5,
+)
+
+fig3_json = fig3.to_json()
+
+# Building line chart #4  by top-X authors
+
+# Find the top X emails based on commit count
+top_emails = total_commits_by_email.nlargest(10).index
+
+top_commit_counts = commit_counts[commit_counts['email'].isin(top_emails).sort_values(ascending=False)]
+
+fig4 = px.line(
+    top_commit_counts,
+    x="year",
+    y="commit_count",
+    color="email",
+    title="Count of commits by top authors by years",
+    markers=True)
+
+fig4.update_layout(
+    legend=dict(
+        orientation="h",
+        entrywidth=70,
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+    ),
+    title_x=0.5,
+    showlegend=True,
+    xaxis=dict(
+        tickmode='linear',
+        tick0=yearly_counts['year'].min(),
+        dtick=1
+    )
+)
+
+fig4_json = fig4.to_json()
+
+# html-template for putting graphs
+
+template = """<html>
+<head>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+
+    <div id='divPlotly1'></div>
+    <script>
+        var plotly_data = {}
+        Plotly.react('divPlotly1', plotly_data.data, plotly_data.layout);
+    </script>
+
+    <div id='divPlotly2'></div>
+    <script>
+        var plotly_data = {}
+        Plotly.react('divPlotly2', plotly_data.data, plotly_data.layout);
+    </script>
+
+    <p style="text-align: center; font-size: 18px; font-family: Arial, sans-serif; margin: 30px 0; color:#444">
+        Top Authors
+    </p>
+    <div id='divPlotly3'></div>
+    <script>
+        var plotly_data = {}
+        Plotly.react('divPlotly3', plotly_data.data, plotly_data.layout);
+    </script>
+    
+    <div id='divPlotly4'></div>
+    <script>
+        var plotly_data = {}
+        Plotly.react('divPlotly4', plotly_data.data, plotly_data.layout);
+    </script>
+
+
+</body>
+
+</html>"""
+
+# write the JSON to the HTML template
+with open('result/html_report_plot.html', 'w') as f:
+    f.write(template.format(fig1_json, fig2_json, fig3_json, fig4_json))

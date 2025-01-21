@@ -1,0 +1,6 @@
+git_repos/*
+.idea
+.DS_Store
+tmp
+notes
+result/*
