@@ -147,7 +147,7 @@ tail_template="""
 graph_template="""
     <div id='{div_name}'></div>
     <script>
-        var plotly_data = {}
+        var plotly_data = {content}
         Plotly.react('{div_name}', plotly_data.data, plotly_data.layout);
     </script>
 """
@@ -160,10 +160,10 @@ table_template="""
 
 #Build HTML report
 html_report = (head_template +
-              graph_template.format( fig1_json, div_name="fig1") +
-              graph_template.format( fig2_json, div_name="fig2") +
-              table_template.format( fig3_json, div_name="fig3") +
-              table_template.format(fig4_json, div_name="fig4") +
+              graph_template.format( content=fig1_json, div_name="fig1") +
+              graph_template.format( content=fig2_json, div_name="fig2") +
+              table_template.format( content=fig3_json, div_name="fig3") +
+              graph_template.format(content=fig4_json, div_name="fig4") +
               tail_template
               )
 
