@@ -134,44 +134,39 @@ fig4_json = fig4.to_json()
 
 # html-template for putting graphs
 
-template = """<html>
+head_template = """<html>
 <head>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
-
-    <div id='divPlotly1'></div>
-    <script>
-        var plotly_data = {}
-        Plotly.react('divPlotly1', plotly_data.data, plotly_data.layout);
-    </script>
-
-    <div id='divPlotly2'></div>
-    <script>
-        var plotly_data = {}
-        Plotly.react('divPlotly2', plotly_data.data, plotly_data.layout);
-    </script>
-
-    <p style="text-align: center; font-size: 18px; font-family: Arial, sans-serif; margin: 30px 0; color:#444">
-        Top Authors
-    </p>
-    <div id='divPlotly3'></div>
-    <script>
-        var plotly_data = {}
-        Plotly.react('divPlotly3', plotly_data.data, plotly_data.layout);
-    </script>
-    
-    <div id='divPlotly4'></div>
-    <script>
-        var plotly_data = {}
-        Plotly.react('divPlotly4', plotly_data.data, plotly_data.layout);
-    </script>
-
-
+"""
+tail_template="""
 </body>
 
 </html>"""
+graph_template="""
+    <div id='{div_name}'></div>
+    <script>
+        var plotly_data = {}
+        Plotly.react('{div_name}', plotly_data.data, plotly_data.layout);
+    </script>
+"""
+table_template="""
+    <p style="text-align: center; font-size: 18px; font-family: Arial, sans-serif; margin: 30px 0; color:#444">
+        Top Authors
+    </p>
+{}
+""".format(graph_template)
+
+#Build HTML report
+html_report = (head_template +
+              graph_template.format( fig1_json, div_name="fig1") +
+              graph_template.format( fig2_json, div_name="fig2") +
+              table_template.format( fig3_json, div_name="fig3") +
+              table_template.format(fig4_json, div_name="fig4") +
+              tail_template
+              )
 
 # write the JSON to the HTML template
 with open('result/html_report_plot.html', 'w') as f:
-    f.write(template.format(fig1_json, fig2_json, fig3_json, fig4_json))
+    f.write(html_report)
