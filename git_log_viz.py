@@ -140,29 +140,30 @@ head_template = """<html>
 </head>
 <body>
 """
-tail_template="""
+tail_template = """
 </body>
 
 </html>"""
-graph_template="""
+graph_template = """
     <div id='{div_name}'></div>
     <script>
         var plotly_data = {content}
         Plotly.react('{div_name}', plotly_data.data, plotly_data.layout);
     </script>
 """
-table_template="""
+table_template = """
     <p style="text-align: center; font-size: 18px; font-family: Arial, sans-serif; margin: 30px 0; color:#444">
         Top Authors
     </p>
 {}
 """.format(graph_template)
 
-#Build HTML report
-html_report = (head_template +
-              graph_template.format( content=fig1_json, div_name="fig1") +
-              graph_template.format( content=fig2_json, div_name="fig2") +
-              table_template.format( content=fig3_json, div_name="fig3") +
+# Build HTML report
+html_report = (
+              head_template +
+              graph_template.format(content=fig1_json, div_name="fig1") +
+              graph_template.format(content=fig2_json, div_name="fig2") +
+              table_template.format(content=fig3_json, div_name="fig3") +
               graph_template.format(content=fig4_json, div_name="fig4") +
               tail_template
               )
