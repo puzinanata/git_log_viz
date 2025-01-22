@@ -6,6 +6,36 @@ import plotly.figure_factory as ff
 import pandas as pd
 from datetime import datetime
 
+# Template section
+
+head_template = """<html>
+<head>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+"""
+tail_template = """
+</body>
+
+</html>"""
+graph_template_js = """
+    <div id='{div_name}'></div>
+    <script>
+        var plotly_data = {content}
+        Plotly.react('{div_name}', plotly_data.data, plotly_data.layout);
+    </script>
+"""
+table_template_js = """
+    <p style="text-align: center; font-size: 18px; font-family: Arial, sans-serif; margin: 30px 0; color:#444">
+        Top Authors
+    </p>
+{}
+""".format(graph_template_js)
+
+image_template = """
+<img src="{path}" alt="A responsive image" style="max-width: 100%; height: auto;">
+"""
+
 # !!!Action required - put path to Bash command
 command = "cd ./git_repos/neo-go ; git log "
 
@@ -44,6 +74,7 @@ fig1 = px.line(yearly_counts, x='year', y='commit_count', title='Count of commit
 
 fig1.update_layout(
     title_x=0.5,
+
     xaxis=dict(
         tickmode='linear',  # Ensure linear ticks (e.g., 2018, 2019, ...)
         tick0=yearly_counts['year'].min(),  # Start ticks from the minimum year
@@ -51,6 +82,7 @@ fig1.update_layout(
     )
 )
 
+fig1.write_image("result/fig1.png", width=1424, height=450, scale=2)
 fig1_json = fig1.to_json()
 
 # !!!Action required - put number of years instead of 5 if needed
@@ -132,42 +164,25 @@ fig4.update_layout(
 
 fig4_json = fig4.to_json()
 
-# html-template for putting graphs
-
-head_template = """<html>
-<head>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-</head>
-<body>
-"""
-tail_template = """
-</body>
-
-</html>"""
-graph_template = """
-    <div id='{div_name}'></div>
-    <script>
-        var plotly_data = {content}
-        Plotly.react('{div_name}', plotly_data.data, plotly_data.layout);
-    </script>
-"""
-table_template = """
-    <p style="text-align: center; font-size: 18px; font-family: Arial, sans-serif; margin: 30px 0; color:#444">
-        Top Authors
-    </p>
-{}
-""".format(graph_template)
-
 # Build HTML report
-html_report = (
-              head_template +
-              graph_template.format(content=fig1_json, div_name="fig1") +
-              graph_template.format(content=fig2_json, div_name="fig2") +
-              table_template.format(content=fig3_json, div_name="fig3") +
-              graph_template.format(content=fig4_json, div_name="fig4") +
-              tail_template
+html_js_report = (
+        head_template +
+        graph_template_js.format(content=fig1_json, div_name="fig1") +
+        graph_template_js.format(content=fig2_json, div_name="fig2") +
+        table_template_js.format(content=fig3_json, div_name="fig3") +
+        graph_template_js.format(content=fig4_json, div_name="fig4") +
+        tail_template
+              )
+
+html_image_report = (
+        head_template +
+        image_template.format(path="fig1.png") +
+        tail_template
               )
 
 # write the JSON to the HTML template
 with open('result/html_report_plot.html', 'w') as f:
-    f.write(html_report)
+    f.write(html_js_report)
+
+with open('result/html_report_plot_image.html', 'w') as f:
+    f.write(html_image_report)
