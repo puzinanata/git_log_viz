@@ -8,29 +8,36 @@ from datetime import datetime
 
 # Template section
 
-head_template = """<html>
+head_js_template = """<html>
 <head>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
 """
+head_template = """<html>
+<head>
+    
+</head>
+<body>
+"""
+
 tail_template = """
 </body>
 
 </html>"""
-graph_template_js = """
+graph_js_template = """
     <div id='{div_name}'></div>
     <script>
         var plotly_data = {content}
         Plotly.react('{div_name}', plotly_data.data, plotly_data.layout);
     </script>
 """
-table_template_js = """
+table_js_template = """
     <p style="text-align: center; font-size: 18px; font-family: Arial, sans-serif; margin: 30px 0; color:#444">
         Top Authors
     </p>
 {}
-""".format(graph_template_js)
+""".format(graph_js_template)
 
 image_template = """
 <img src="{path}" alt="A responsive image" style="max-width: 100%; height: auto;">
@@ -166,11 +173,11 @@ fig4_json = fig4.to_json()
 
 # Build HTML report
 html_js_report = (
-        head_template +
-        graph_template_js.format(content=fig1_json, div_name="fig1") +
-        graph_template_js.format(content=fig2_json, div_name="fig2") +
-        table_template_js.format(content=fig3_json, div_name="fig3") +
-        graph_template_js.format(content=fig4_json, div_name="fig4") +
+        head_js_template +
+        graph_js_template.format(content=fig1_json, div_name="fig1") +
+        graph_js_template.format(content=fig2_json, div_name="fig2") +
+        table_js_template.format(content=fig3_json, div_name="fig3") +
+        graph_js_template.format(content=fig4_json, div_name="fig4") +
         tail_template
               )
 
