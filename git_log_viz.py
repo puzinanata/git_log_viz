@@ -40,8 +40,16 @@ table_js_template = """
 """.format(graph_js_template)
 
 image_template = """
-<img src="{path}" alt="A responsive image" style="max-width: 100%; height: auto;">
+<img src="{path}" style="max-width: 100%; height: auto;">
 """
+
+table_image_template = """
+    <p style="text-align: center; font-size: 18px; font-family: Arial, sans-serif; margin: 30px 0; color:#444">
+        Top Authors
+    </p>
+{}
+""".format(image_template)
+
 
 # !!!Action required - put path to Bash command
 command = "cd ./git_repos/neo-go ; git log "
@@ -81,7 +89,6 @@ fig1 = px.line(yearly_counts, x='year', y='commit_count', title='Count of commit
 
 fig1.update_layout(
     title_x=0.5,
-
     xaxis=dict(
         tickmode='linear',  # Ensure linear ticks (e.g., 2018, 2019, ...)
         tick0=yearly_counts['year'].min(),  # Start ticks from the minimum year
@@ -112,6 +119,7 @@ fig2.update_layout(
     )
 )
 
+fig2.write_image("result/fig2.png", width=1424, height=450, scale=2)
 fig2_json = fig2.to_json()
 
 # Building graph table #3 with top authors
@@ -134,6 +142,7 @@ fig3.update_layout(
     title_x=0.5,
 )
 
+fig3.write_image("result/fig3.png", width=1424, height=450, scale=2)
 fig3_json = fig3.to_json()
 
 # Building line chart #4  by top-X authors
@@ -154,7 +163,6 @@ fig4 = px.line(
 fig4.update_layout(
     legend=dict(
         orientation="h",
-        entrywidth=70,
         yanchor="bottom",
         y=1.02,
         xanchor="right",
@@ -169,6 +177,7 @@ fig4.update_layout(
     )
 )
 
+fig4.write_image("result/fig4.png", width=1409, height=450, scale=2)
 fig4_json = fig4.to_json()
 
 # Build HTML report
@@ -184,6 +193,9 @@ html_js_report = (
 html_image_report = (
         head_template +
         image_template.format(path="fig1.png") +
+        image_template.format(path="fig2.png") +
+        table_image_template.format(path="fig3.png") +
+        image_template.format(path="fig4.png") +
         tail_template
               )
 
