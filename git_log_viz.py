@@ -6,7 +6,7 @@ import plotly.figure_factory as ff
 import pandas as pd
 from datetime import datetime
 
-# Template section
+# #1. Template section
 
 head_js_template = """<html>
 <head>
@@ -50,7 +50,7 @@ table_image_template = """
 {}
 """.format(image_template)
 
-
+# #2. Section: CSV file generation from git logs
 # !!!Action required - put path to Bash command
 command = "cd ./git_repos/neo-go ; git log "
 
@@ -67,6 +67,7 @@ with open("result/git_log.csv", mode="w", newline="", encoding="utf-8") as csvfi
     writer.writerow(["commit", "author", "date"])
     writer.writerows(matches)
 
+# #3. Section of data preparation
 df = pd.read_csv('result/git_log.csv')
 
 df["date"] = pd.to_datetime(df["date"], utc=True)
@@ -80,8 +81,9 @@ df['month_year'] = pd.to_datetime(df['month_year'], format='%Y-%m')
 # Extract emails using regular expression
 df["email"] = df["author"].str.extract(r'<([^>]+)>')
 
-# Building line chart #1 by years.
+# #4. Section of graphs building
 
+# Building line chart #1 by years.
 # Group by 'year' and count the 'commit' occurrences
 yearly_counts = df.groupby('year')['commit'].count().reset_index()
 yearly_counts.columns = ['year', 'commit_count']
@@ -180,7 +182,9 @@ fig4.update_layout(
 fig4.write_image("result/fig4.png", width=1409, height=450, scale=2)
 fig4_json = fig4.to_json()
 
-# Build HTML report
+# #5. Final Section of generation html reports
+
+# Building of  HTML report with js
 html_js_report = (
         head_js_template +
         graph_js_template.format(content=fig1_json, div_name="fig1") +
@@ -190,6 +194,7 @@ html_js_report = (
         tail_template
               )
 
+# Building of  HTML report with static images
 html_image_report = (
         head_template +
         image_template.format(path="fig1.png") +
@@ -203,5 +208,6 @@ html_image_report = (
 with open('result/html_report_plot.html', 'w') as f:
     f.write(html_js_report)
 
+# write image to the HTML template
 with open('result/html_report_plot_image.html', 'w') as f:
     f.write(html_image_report)
