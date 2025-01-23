@@ -81,6 +81,9 @@ df['month_year'] = pd.to_datetime(df['month_year'], format='%Y-%m')
 # Extract emails using regular expression
 df["email"] = df["author"].str.extract(r'<([^>]+)>')
 
+# Extract the part before '@' to create new column 'Username'
+df['username'] = df['email'].str.split('@').str[0]
+
 # #4. Section of graphs building
 
 # Building line chart #1 by years.
@@ -125,15 +128,18 @@ fig2.write_image("result/fig2.png", width=1424, height=450, scale=2)
 fig2_json = fig2.to_json()
 
 # Building graph table #3 with top authors
+# Choose Username or Email for author defining
+# author = 'username'
+author = 'email'
 
 # Grouped by year and email and count the commits
-commit_counts = df.groupby(['year', 'email']).size().reset_index(name='commit_count')
-total_commits_by_email = commit_counts.groupby('email')['commit_count'].sum()
+commit_counts = df.groupby(['year', author]).size().reset_index(name='commit_count')
+total_commits_by_email = commit_counts.groupby(author)['commit_count'].sum()
 top_10_emails = total_commits_by_email.sort_values(ascending=False).head(10)
 
 table_data = {
     "Rank": list(range(1, len(top_10_emails) + 1)),
-    "Email": top_10_emails.index.tolist(),
+    "Author": top_10_emails.index.tolist(),
     "Total Commits": top_10_emails.values.tolist()
 }
 
@@ -152,13 +158,13 @@ fig3_json = fig3.to_json()
 # Find the top X emails based on commit count
 top_emails = total_commits_by_email.nlargest(10).index
 
-top_commit_counts = commit_counts[commit_counts['email'].isin(top_emails).sort_values(ascending=False)]
+top_commit_counts = commit_counts[commit_counts[author].isin(top_emails).sort_values(ascending=False)]
 
 fig4 = px.line(
     top_commit_counts,
     x="year",
     y="commit_count",
-    color="email",
+    color=author,
     title="Count of commits by top authors by years",
     markers=True)
 
