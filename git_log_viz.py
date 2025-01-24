@@ -9,9 +9,17 @@ from datetime import datetime
 
 # Choose repository: put name of repo
 repo_name = 'neo-go'
+
 # Choose Username or Email for author defining
 author = 'username'
-#author = 'email'
+# author = 'email'
+
+# Username to exclude
+exclude_username = []
+
+# Usernames to combine
+old_username = []
+new_username = []
 
 # #1. Template section
 
@@ -90,6 +98,14 @@ df["email"] = df["author"].str.extract(r'<([^>]+)>')
 
 # Extract the part before '@' to create new column 'Username'
 df['username'] = df['email'].str.split('@').str[0]
+
+# Exclude the username using a condition
+df = df[~df['username'].isin(exclude_username)]
+
+# Replace all occurrences of 'anna' with 'anna.shaleva'
+df['username'] = df['username'].replace(old_username, new_username)
+
+# Transfer username to lower case
 df['username'] = df['username'].str.lower()
 
 # #4. Section of graphs building
