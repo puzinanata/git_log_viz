@@ -4,7 +4,7 @@ import re
 import plotly.express as px
 import plotly.figure_factory as ff
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 # #0. Section: Report settings
 
 # Choose repository: put name of repo
@@ -20,6 +20,9 @@ exclude_username = []
 # Usernames to combine
 old_username = []
 new_username = []
+
+# Define number of top authors
+num_top = 10
 
 # #1. Template section
 
@@ -66,7 +69,7 @@ table_image_template = """
 """.format(image_template)
 
 # #2. Section: CSV file generation from git logs
-# !!!Action required - put path to Bash command
+
 command = "cd ./git_repos/{} ; git log ".format(repo_name)
 
 result = subprocess.run(command, shell=True, text=True, capture_output=True)
@@ -110,7 +113,8 @@ df['username'] = df['username'].str.lower()
 
 # #4. Section of graphs building
 
-# Building line chart #1 by years.
+# Building line chart with commits by years.
+
 # Group by 'year' and count the 'commit' occurrences
 yearly_counts = df.groupby('year')['commit'].count().reset_index()
 yearly_counts.columns = ['year', 'commit_count']
@@ -128,60 +132,33 @@ fig1.update_layout(
 fig1.write_image("result/fig1.png", width=1424, height=450, scale=2)
 fig1_json = fig1.to_json()
 
-# !!!Action required - put number of years instead of 5 if needed
-# Building line chart #2 by last X years by month.
 
-# Group by 'month_year' and count the 'commit' occurrences
-cutoff_date = pd.to_datetime(f"{datetime.now().year - 5}-01-01")
-filtered_df = df[df['month_year'] >= cutoff_date]
-monthly_counts = filtered_df.groupby(['month_year'])['commit'].count().reset_index()
-monthly_counts.columns = ['month_year', 'commit_count']
-fig2 = px.line(monthly_counts, x='month_year', y='commit_count', title='Count of commits by Month', markers=True)
-
-fig2.update_layout(
-    title_x=0.5,
-    xaxis_tickformat='%Y-%B',
-    xaxis=dict(
-        tickmode='linear',
-        tick0=monthly_counts['month_year'].min(),
-        dtick='M1'
-    )
-)
-
-fig2.write_image("result/fig2.png", width=1424, height=450, scale=2)
-fig2_json = fig2.to_json()
-
-# Building graph table #3 with top authors
+# Building graph table with top authors
 
 # Grouped by year and email and count the commits
 commit_counts = df.groupby(['year', author]).size().reset_index(name='commit_count')
 total_commits_by_email = commit_counts.groupby(author)['commit_count'].sum()
-top_10_emails = total_commits_by_email.sort_values(ascending=False).head(10)
+top_x_emails = total_commits_by_email.sort_values(ascending=False).head(num_top)
 
 table_data = {
-    "Rank": list(range(1, len(top_10_emails) + 1)),
-    "Author": top_10_emails.index.tolist(),
-    "Total Commits": top_10_emails.values.tolist()
+    "Rank": list(range(1, len(top_x_emails) + 1)),
+    "Author": top_x_emails.index.tolist(),
+    "Total Commits": top_x_emails.values.tolist()
 }
 
-fig3 = ff.create_table([list(table_data.keys())] + list(zip(*table_data.values())))
+fig2 = ff.create_table([list(table_data.keys())] + list(zip(*table_data.values())))
 
-fig3.update_layout(
-    title="Top-10 authors",
-    title_x=0.5,
-)
+fig2.write_image("result/fig2.png", width=1424, height=450, scale=2)
+fig2_json = fig2.to_json()
 
-fig3.write_image("result/fig3.png", width=1424, height=450, scale=2)
-fig3_json = fig3.to_json()
-
-# Building line chart #4  by top-X authors
+# Building line chart  by top authors
 
 # Find the top X emails based on commit count
-top_emails = total_commits_by_email.nlargest(10).index
+top_emails = total_commits_by_email.nlargest(num_top).index
 
 top_commit_counts = commit_counts[commit_counts[author].isin(top_emails).sort_values(ascending=False)]
 
-fig4 = px.line(
+fig3 = px.line(
     top_commit_counts,
     x="year",
     y="commit_count",
@@ -189,7 +166,7 @@ fig4 = px.line(
     title="Count of commits by top authors by years",
     markers=True)
 
-fig4.update_layout(
+fig3.update_layout(
     legend=dict(
         orientation="h",
         yanchor="bottom",
@@ -206,8 +183,84 @@ fig4.update_layout(
     )
 )
 
-fig4.write_image("result/fig4.png", width=1409, height=450, scale=2)
+fig3.write_image("result/fig3.png", width=1409, height=450, scale=2)
+fig3_json = fig3.to_json()
+
+
+# Building line chart by last 12 months before current date
+
+# Group by 'month_year' and count the 'commit' occurrences
+cutoff_date = datetime.now() - timedelta(days=365)
+filtered_df = df[df['month_year'] >= cutoff_date]
+monthly_counts = filtered_df.groupby(['month_year'])['commit'].count().reset_index()
+monthly_counts.columns = ['month_year', 'commit_count']
+fig4 = px.line(monthly_counts, x='month_year', y='commit_count', title='Count of commits by last 12 months', markers=True)
+
+fig4.update_layout(
+    title_x=0.5,
+    xaxis_tickformat='%Y-%B',
+    xaxis=dict(
+        tickmode='linear',
+        tick0=monthly_counts['month_year'].min(),
+        dtick='M1'
+    )
+)
+
+fig4.write_image("result/fig4.png", width=1424, height=450, scale=2)
 fig4_json = fig4.to_json()
+
+# Building graph table with top authors by last 12 months
+
+# Grouped by year and email and count the commits
+commit_counts = filtered_df.groupby(['month_year', author]).size().reset_index(name='commit_count')
+total_commits_by_email = commit_counts.groupby(author)['commit_count'].sum()
+top_x_emails = total_commits_by_email.sort_values(ascending=False).head(num_top)
+
+table_data = {
+    "Rank": list(range(1, len(top_x_emails) + 1)),
+    "Author": top_x_emails.index.tolist(),
+    "Total Commits": top_x_emails.values.tolist()
+}
+
+fig5 = ff.create_table([list(table_data.keys())] + list(zip(*table_data.values())))
+
+fig5.write_image("result/fig5.png", width=1424, height=450, scale=2)
+fig5_json = fig5.to_json()
+
+# Building line chart  by top authors
+
+# Find the top X emails based on commit count
+top_emails = total_commits_by_email.nlargest(num_top).index
+
+top_commit_counts = commit_counts[commit_counts[author].isin(top_emails).sort_values(ascending=False)]
+
+fig6 = px.line(
+    top_commit_counts,
+    x="month_year",
+    y="commit_count",
+    color=author,
+    title="Count of commits by top authors by last 12 months",
+    markers=True)
+
+fig6.update_layout(
+    legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+    ),
+    title_x=0.5,
+    xaxis_tickformat='%Y-%B',
+    xaxis=dict(
+        tickmode='linear',
+        tick0=monthly_counts['month_year'].min(),
+        dtick='M1'
+    )
+)
+
+fig6.write_image("result/fig6.png", width=1409, height=450, scale=2)
+fig6_json = fig6.to_json()
 
 # #5. Final Section of generation html reports
 
@@ -215,9 +268,11 @@ fig4_json = fig4.to_json()
 html_js_report = (
         head_js_template +
         graph_js_template.format(content=fig1_json, div_name="fig1") +
-        graph_js_template.format(content=fig2_json, div_name="fig2") +
-        table_js_template.format(content=fig3_json, div_name="fig3") +
+        table_js_template.format(content=fig2_json, div_name="fig2") +
+        graph_js_template.format(content=fig3_json, div_name="fig3") +
         graph_js_template.format(content=fig4_json, div_name="fig4") +
+        table_js_template.format(content=fig5_json, div_name="fig5") +
+        graph_js_template.format(content=fig6_json, div_name="fig6") +
         tail_template
               )
 
@@ -225,9 +280,11 @@ html_js_report = (
 html_image_report = (
         head_template +
         image_template.format(path="fig1.png") +
-        image_template.format(path="fig2.png") +
-        table_image_template.format(path="fig3.png") +
+        table_image_template.format(path="fig2.png") +
+        image_template.format(path="fig3.png") +
         image_template.format(path="fig4.png") +
+        table_image_template.format(path="fig5.png") +
+        image_template.format(path="fig6.png") +
         tail_template
               )
 
