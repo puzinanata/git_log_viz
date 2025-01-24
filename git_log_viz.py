@@ -7,6 +7,8 @@ import pandas as pd
 from datetime import datetime
 # #0. Section: Report settings
 
+# Choose repository: put name of repo
+repo_name = 'neo-go'
 # Choose Username or Email for author defining
 author = 'username'
 #author = 'email'
@@ -57,7 +59,7 @@ table_image_template = """
 
 # #2. Section: CSV file generation from git logs
 # !!!Action required - put path to Bash command
-command = "cd ./git_repos/neo-go ; git log "
+command = "cd ./git_repos/{} ; git log ".format(repo_name)
 
 result = subprocess.run(command, shell=True, text=True, capture_output=True)
 
