@@ -5,6 +5,11 @@ import plotly.express as px
 import plotly.figure_factory as ff
 import pandas as pd
 from datetime import datetime
+# #0. Section: Report settings
+
+# Choose Username or Email for author defining
+author = 'username'
+#author = 'email'
 
 # #1. Template section
 
@@ -83,6 +88,7 @@ df["email"] = df["author"].str.extract(r'<([^>]+)>')
 
 # Extract the part before '@' to create new column 'Username'
 df['username'] = df['email'].str.split('@').str[0]
+df['username'] = df['username'].str.lower()
 
 # #4. Section of graphs building
 
@@ -128,9 +134,6 @@ fig2.write_image("result/fig2.png", width=1424, height=450, scale=2)
 fig2_json = fig2.to_json()
 
 # Building graph table #3 with top authors
-# Choose Username or Email for author defining
-# author = 'username'
-author = 'email'
 
 # Grouped by year and email and count the commits
 commit_counts = df.groupby(['year', author]).size().reset_index(name='commit_count')
