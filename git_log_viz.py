@@ -99,10 +99,10 @@ df["email"] = df["author"].str.extract(r'<([^>]+)>')
 # Extract the part before '@' to create new column 'Username'
 df['username'] = df['email'].str.split('@').str[0]
 
-# Exclude the username using a condition
+# Exclude the username
 df = df[~df['username'].isin(exclude_username)]
 
-# Replace all occurrences of 'anna' with 'anna.shaleva'
+# Replace all occurrences of old username with new username
 df['username'] = df['username'].replace(old_username, new_username)
 
 # Transfer username to lower case
