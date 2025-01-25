@@ -1,5 +1,4 @@
 import subprocess
-import csv
 import re
 import plotly.express as px
 import plotly.figure_factory as ff
@@ -70,23 +69,46 @@ table_image_template = """
 
 # #2. Section: CSV file generation from git logs
 
-command = "cd ./git_repos/{} ; git log ".format(repo_name)
+# Step 1: Command to extract data from git log
 
+command = "cd ./git_repos/{} ; git log --pretty=format:'%H %ae %ad' --date=short --stat ".format(repo_name)
 result = subprocess.run(command, shell=True, text=True, capture_output=True)
 
-# Pattern to extract data
-pattern = r"commit\s+([a-f0-9]+)\nAuthor:\s+(.*?)\nDate:\s+(.*)"
+# Step 2: Process the output
+lines = result.stdout.splitlines()
+commits = []
 
-matches = re.findall(pattern, result.stdout, re.MULTILINE)
+# Regex to match commit details and the summary line
+commit_pattern = r"^([a-f0-9]{40})\s+(\S+)\s+(.+)"
+summary_pattern = r"(\d+) files? changed.*?(\d+) insertions?\(\+\).*?(\d+) deletions?\(-\)"
 
-# Write to CSV file
-with open("result/git_log.csv", mode="w", newline="", encoding="utf-8") as csvfile:
-    writer = csv.writer(csvfile)
-    writer.writerow(["commit", "author", "date"])
-    writer.writerows(matches)
+# Parse the lines
+for line in lines:
+    commit_match = re.match(commit_pattern, line)
+    summary_match = re.search(summary_pattern, line)
+
+    if commit_match:
+        # Start a new commit entry
+        commits.append({
+            "commit": commit_match.group(1),
+            "email": commit_match.group(2),
+            "date": commit_match.group(3),
+            "num_changes": 0,  # Placeholder for total changes
+        })
+    elif summary_match:
+        # Update the last commit with summary data
+        num_insertions = int(summary_match.group(2))
+        num_deletions = int(summary_match.group(3))
+        commits[-1]["num_changes"] = num_insertions + num_deletions
+
+# Step 3: Convert to a DataFrame
+df = pd.DataFrame(commits)
+
+# Step 4: Save to CSV
+df.to_csv("result/git_log_with_changes.csv", index=False)
 
 # #3. Section of data preparation
-df = pd.read_csv('result/git_log.csv')
+df = pd.read_csv('result/git_log_with_changes.csv')
 
 df["date"] = pd.to_datetime(df["date"], utc=True)
 # Creation new columns
@@ -96,8 +118,6 @@ df["year"] = df["year"].astype(int)
 df["month_year"] = df["date"].dt.strftime('%Y-%m')
 df['month_year'] = pd.to_datetime(df['month_year'], format='%Y-%m')
 
-# Extract emails using regular expression
-df["email"] = df["author"].str.extract(r'<([^>]+)>')
 
 # Extract the part before '@' to create new column 'Username'
 df['username'] = df['email'].str.split('@').str[0]
@@ -194,7 +214,13 @@ cutoff_date = datetime.now() - timedelta(days=365)
 filtered_df = df[df['month_year'] >= cutoff_date]
 monthly_counts = filtered_df.groupby(['month_year'])['commit'].count().reset_index()
 monthly_counts.columns = ['month_year', 'commit_count']
-fig4 = px.line(monthly_counts, x='month_year', y='commit_count', title='Count of commits by last 12 months', markers=True)
+fig4 = px.line(
+    monthly_counts,
+    x='month_year',
+    y='commit_count',
+    title='Count of commits by last 12 months',
+    markers=True
+)
 
 fig4.update_layout(
     title_x=0.5,
