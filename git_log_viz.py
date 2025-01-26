@@ -71,7 +71,7 @@ table_image_template = """
 
 # Step 1: Command to extract data from git log
 
-command = "cd ./git_repos/{} ; git log --pretty=format:'%H %ae %ad' --date=short --stat ".format(repo_name)
+command = ("cd ./git_repos/{} ; git log --pretty=format:'%H %an <%ae> %ad' --date=short --stat --no-merges").format(repo_name)
 result = subprocess.run(command, shell=True, text=True, capture_output=True)
 
 # Step 2: Process the output
@@ -80,6 +80,7 @@ commits = []
 
 # Regex to match commit details and the summary line
 commit_pattern = r"^([a-f0-9]{40})\s+(\S+)\s+(.+)"
+# git log --pretty=format:'%H %an <%ae> %ad' --date=short --stat --no-merges | grep -o -E '^ [0-9]+ (file changed|files changed)'
 summary_pattern = r"(\d+) files? changed.*?(\d+) insertions?\(\+\).*?(\d+) deletions?\(-\)"
 
 # Parse the lines
