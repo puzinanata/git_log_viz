@@ -341,11 +341,11 @@ html_js_report = (
         head_js_template +
         graph_js_template.format(content=fig1_json, div_name="fig1") +
         table_js_template.format(content=fig2_json, div_name="fig2") +
+        table_js_template.format(content=fig7_json, div_name="fig7") +
         graph_js_template.format(content=fig3_json, div_name="fig3") +
         graph_js_template.format(content=fig4_json, div_name="fig4") +
         table_js_template.format(content=fig5_json, div_name="fig5") +
         graph_js_template.format(content=fig6_json, div_name="fig6") +
-        table_js_template.format(content=fig7_json, div_name="fig7") +
         tail_template
               )
 
@@ -354,11 +354,11 @@ html_image_report = (
         head_template +
         image_template.format(path="fig1.png") +
         table_image_template.format(path="fig2.png") +
+        table_image_template.format(path="fig7.png") +
         image_template.format(path="fig3.png") +
         image_template.format(path="fig4.png") +
         table_image_template.format(path="fig5.png") +
         image_template.format(path="fig6.png") +
-        table_image_template.format(path="fig7.png") +
         tail_template
               )
 
