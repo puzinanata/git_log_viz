@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.figure_factory as ff
 import pandas as pd
 from datetime import datetime, timedelta
+
 # #0. Section: Report settings
 
 # Choose repository: put name of repo
@@ -168,23 +169,27 @@ fig1.write_image("result/fig1.png", width=1424, height=450, scale=2)
 fig1_json = fig1.to_json()
 
 
-# Building graph table with top authors
+# Building graph table with top authors by count the commits
 
-# Grouped by year and email and count the commits
+# Grouped by year and author and count the commits
 commit_counts = df.groupby(['year', author]).size().reset_index(name='commit_count')
 total_commits_by_email = commit_counts.groupby(author)['commit_count'].sum()
 top_x_emails = total_commits_by_email.sort_values(ascending=False).head(num_top)
 
+total_commits = total_commits_by_email.sum()
+
 table_data = {
     "Rank": list(range(1, len(top_x_emails) + 1)),
     "Author": top_x_emails.index.tolist(),
-    "Total Commits": top_x_emails.values.tolist()
+    "Total Commits": [f"{value:,}".replace(",", " ") for value in (top_x_emails.values.tolist())],
+    "Share of Author in %": (top_x_emails.values/total_commits * 100).round(0).astype(int).tolist()
 }
 
 fig2 = ff.create_table([list(table_data.keys())] + list(zip(*table_data.values())))
 
 fig2.write_image("result/fig2.png", width=1424, height=450, scale=2)
 fig2_json = fig2.to_json()
+
 
 # Building line chart  by top authors
 
@@ -257,10 +262,13 @@ commit_counts = filtered_df.groupby(['month_year', author]).size().reset_index(n
 total_commits_by_email = commit_counts.groupby(author)['commit_count'].sum()
 top_x_emails = total_commits_by_email.sort_values(ascending=False).head(num_top)
 
+total_commits = total_commits_by_email.sum()
+
 table_data = {
     "Rank": list(range(1, len(top_x_emails) + 1)),
     "Author": top_x_emails.index.tolist(),
-    "Total Commits": top_x_emails.values.tolist()
+    "Total Commits": [f"{value:,}".replace(",", " ") for value in (top_x_emails.values.tolist())],
+    "Share of Author in %": (top_x_emails.values/total_commits * 100).round(0).astype(int).tolist()
 }
 
 fig5 = ff.create_table([list(table_data.keys())] + list(zip(*table_data.values())))
@@ -303,6 +311,29 @@ fig6.update_layout(
 fig6.write_image("result/fig6.png", width=1409, height=450, scale=2)
 fig6_json = fig6.to_json()
 
+# Building graph table with top authors by sum of changes
+
+# Grouped by year and author and sum of changes
+sum_changes = df.groupby(['year', author]).sum('num_changes')
+
+total_changes_by_authors = sum_changes.groupby(author)['num_changes'].sum()
+
+top_x_authors = total_changes_by_authors.sort_values(ascending=False).head(num_top)
+
+total_changes = total_changes_by_authors.sum()
+
+table_data = {
+    "Rank": list(range(1, len(top_x_authors) + 1)),
+    "Author": top_x_authors.index.tolist(),
+    "Total Changes (insertions+deletions)": [f"{value:,}".replace(",", " ") for value in (top_x_authors.values.tolist())],
+    "Share of Author in %": (top_x_authors.values/total_changes * 100).round(0).astype(int).tolist()
+}
+
+fig7 = ff.create_table([list(table_data.keys())] + list(zip(*table_data.values())))
+
+fig7.write_image("result/fig7.png", width=1424, height=450, scale=2)
+fig7_json = fig7.to_json()
+
 # #5. Final Section of generation html reports
 
 # Building of  HTML report with js
@@ -314,6 +345,7 @@ html_js_report = (
         graph_js_template.format(content=fig4_json, div_name="fig4") +
         table_js_template.format(content=fig5_json, div_name="fig5") +
         graph_js_template.format(content=fig6_json, div_name="fig6") +
+        table_js_template.format(content=fig7_json, div_name="fig7") +
         tail_template
               )
 
@@ -326,6 +358,7 @@ html_image_report = (
         image_template.format(path="fig4.png") +
         table_image_template.format(path="fig5.png") +
         image_template.format(path="fig6.png") +
+        table_image_template.format(path="fig7.png") +
         tail_template
               )
 
