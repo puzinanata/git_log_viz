@@ -72,7 +72,7 @@ table_image_template = """
 
 # Step 1: Command to extract data from git log
 
-command = ("cd ./git_repos/{} ; git log --pretty=format:'%H %ae %ad' --date=short --stat --no-merges").format(repo_name)
+command = ("cd ./git_repos/{} ; git log --pretty=format:'%H %ad %ae' --date=short --stat --no-merges").format(repo_name)
 result = subprocess.run(command, shell=True, text=True, capture_output=True)
 
 # Step 2: Process the output
@@ -80,7 +80,7 @@ lines = result.stdout.splitlines()
 commits = []
 
 # Regex to match commit details and the summary line
-commit_pattern = r"^([a-f0-9]{40})\s+(\S+)\s+(.+)"
+commit_pattern = r"^([a-f0-9]{40})\s+(\S+) (.*)"
 
 #  summary_pattern covers following cases:
 #  2 files changed, 0 insertions(+), 0 deletions(-)
@@ -101,8 +101,8 @@ for line in lines:
         # Start a new commit entry
         commits.append({
             "commit": commit_match.group(1),
-            "email": commit_match.group(2),
-            "date": commit_match.group(3),
+            "date": commit_match.group(2),
+            "email": commit_match.group(3),
             "num_changes": 0,  # Placeholder for total changes
         })
     elif summary_match:
