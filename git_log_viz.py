@@ -71,7 +71,7 @@ table_image_template = """
 
 # Step 1: Command to extract data from git log
 
-command = ("cd ./git_repos/{} ; git log --pretty=format:'%H %an <%ae> %ad' --date=short --stat --no-merges").format(repo_name)
+command = ("cd ./git_repos/{} ; git log --pretty=format:'%H %ae %ad' --date=short --stat --no-merges").format(repo_name)
 result = subprocess.run(command, shell=True, text=True, capture_output=True)
 
 # Step 2: Process the output
@@ -80,8 +80,16 @@ commits = []
 
 # Regex to match commit details and the summary line
 commit_pattern = r"^([a-f0-9]{40})\s+(\S+)\s+(.+)"
-# git log --pretty=format:'%H %an <%ae> %ad' --date=short --stat --no-merges | grep -o -E '^ [0-9]+ (file changed|files changed)'
-summary_pattern = r"(\d+) files? changed.*?(\d+) insertions?\(\+\).*?(\d+) deletions?\(-\)"
+
+#  summary_pattern covers following cases:
+#  2 files changed, 0 insertions(+), 0 deletions(-)
+#  2 files changed, 0 insertions(+)
+#  2 files changed, 0 deletions(-)
+#  2 file changed, 0 insertions(+), 0 deletions(-)
+#  2 file changed, 0 insertions(+)
+#  2 file changed, 0 deletions(-)
+summary_pattern = r"(\d+) files? \S+, (\d+) \S+?\([\+\-]\),? ?(\d+)?"
+
 
 # Parse the lines
 for line in lines:
@@ -97,10 +105,16 @@ for line in lines:
             "num_changes": 0,  # Placeholder for total changes
         })
     elif summary_match:
-        # Update the last commit with summary data
-        num_insertions = int(summary_match.group(2))
-        num_deletions = int(summary_match.group(3))
-        commits[-1]["num_changes"] = num_insertions + num_deletions
+        if summary_match.lastindex == 3:
+            # Update the last commit with summary data
+            num_insertions = int(summary_match.group(2))
+            num_deletions = int(summary_match.group(3))
+            commits[-1]["num_changes"] = num_insertions + num_deletions
+        elif summary_match.lastindex == 2:
+            commits[-1]["num_changes"] = int(summary_match.group(2))
+        else:
+            exit(1)
+
 
 # Step 3: Convert to a DataFrame
 df = pd.DataFrame(commits)
