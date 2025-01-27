@@ -22,7 +22,7 @@ old_username = []
 new_username = []
 
 # Define number of top authors
-num_top = 10
+num_top = 5
 
 # #1. Template section
 
@@ -50,6 +50,23 @@ graph_js_template = """
         Plotly.react('{div_name}', plotly_data.data, plotly_data.layout);
     </script>
 """
+
+graph_js_double_template = """
+    <div style="display: flex; justify-content: space-between; gap: 20px;">
+        <div id='{div_name1}' style="flex: 1;"></div>
+        <div id='{div_name2}' style="flex: 1;"></div>
+    </div>
+    <script>
+        // First graph
+        var plotly_data_1 = {content1};
+        Plotly.react('{div_name1}', plotly_data_1.data, plotly_data_1.layout);
+
+        // Second graph
+        var plotly_data_2 = {content2};
+        Plotly.react('{div_name2}', plotly_data_2.data, plotly_data_2.layout);
+    </script>
+"""
+
 table_js_template = """
     <p style="text-align: center; font-size: 18px; font-family: Arial, sans-serif; margin: 30px 0; color:#444">
         Top Authors
@@ -59,6 +76,13 @@ table_js_template = """
 
 image_template = """
 <img src="{path}" style="max-width: 100%; height: auto;">
+"""
+
+image_double_template = """
+<div style="display: flex; justify-content: space-between; gap: 20px;">
+    <img src="{path1}" style="max-width: 48%; height: auto;">
+    <img src="{path2}" style="max-width: 48%; height: auto;">
+</div>
 """
 
 table_image_template = """
@@ -72,7 +96,7 @@ table_image_template = """
 
 # Step 1: Command to extract data from git log
 
-command = ("cd ./git_repos/{} ; git log --pretty=format:'%H %ad %ae' --date=short --stat --no-merges").format(repo_name)
+command = "cd ./git_repos/{} ; git log --pretty=format:'%H %ad %ae' --date=short --stat --no-merges".format(repo_name)
 result = subprocess.run(command, shell=True, text=True, capture_output=True)
 
 # Step 2: Process the output
@@ -190,6 +214,24 @@ fig2 = ff.create_table([list(table_data.keys())] + list(zip(*table_data.values()
 fig2.write_image("result/fig2.png", width=1424, height=450, scale=2)
 fig2_json = fig2.to_json()
 
+# Calculate "Others" category for remaining authors
+others = total_commits_by_email.sum() - top_x_emails.sum()
+if others > 0:
+    top_x_emails['Others'] = others
+
+# Prepare the data for Plotly
+data = top_x_emails.reset_index()
+data.columns = ['Author', 'Commits']
+
+fig2a = px.pie(
+    data,
+    values='Commits',
+    names='Author',
+    title=f"Top {num_top} Authors by Commit Count by Years"
+)
+
+fig2a.write_image("result/fig2a.png", scale=2)
+fig2a_json = fig2a.to_json()
 
 # Building line chart  by top authors
 
@@ -276,6 +318,25 @@ fig5 = ff.create_table([list(table_data.keys())] + list(zip(*table_data.values()
 fig5.write_image("result/fig5.png", width=1424, height=450, scale=2)
 fig5_json = fig5.to_json()
 
+# Calculate "Others" category for remaining authors
+others = total_commits_by_email.sum() - top_x_emails.sum()
+if others > 0:
+    top_x_emails['Others'] = others
+
+# Prepare the data for Plotly
+data = top_x_emails.reset_index()
+data.columns = ['Author', 'Commits']
+
+fig5a = px.pie(
+    data,
+    values='Commits',
+    names='Author',
+    title=f"Top {num_top} Authors by Commit Count in 12 months"
+)
+
+fig5a.write_image("result/fig5a.png", scale=2)
+fig5a_json = fig5a.to_json()
+
 # Building line chart  by top authors
 
 # Find the top X emails based on commit count
@@ -334,6 +395,65 @@ fig7 = ff.create_table([list(table_data.keys())] + list(zip(*table_data.values()
 fig7.write_image("result/fig7.png", width=1424, height=450, scale=2)
 fig7_json = fig7.to_json()
 
+# Calculate "Others" category for remaining authors
+others = total_changes_by_authors.sum() - top_x_authors.sum()
+if others > 0:
+    top_x_authors['Others'] = others
+
+# Prepare the data for Plotly
+data = top_x_authors.reset_index()
+data.columns = ['Author', 'Num_Changes']
+
+fig7b = px.pie(
+    data,
+    values='Num_Changes',
+    names='Author',
+    title=f"Top {num_top} Authors by Share of Changes by Years"
+)
+
+fig7b.write_image("result/fig7b.png", scale=2)
+fig7b_json = fig7b.to_json()
+
+# Building graph table with top authors by sum of changes for the last 12 months
+
+# Grouped by year and author and sum of changes
+sum_changes = filtered_df.groupby(['month_year', author]).sum('num_changes')
+total_changes_by_authors = sum_changes.groupby(author)['num_changes'].sum()
+top_x_authors = total_changes_by_authors.sort_values(ascending=False).head(num_top)
+
+total_changes = total_changes_by_authors.sum()
+
+table_data = {
+    "Rank": list(range(1, len(top_x_authors) + 1)),
+    "Author": top_x_authors.index.tolist(),
+    "Total Changes (insertions+deletions)": [f"{value:,}".replace(",", " ") for value in (top_x_authors.values.tolist())],
+    "Share of Author in %": (top_x_authors.values/total_changes * 100).round(0).astype(int).tolist()
+}
+
+fig8 = ff.create_table([list(table_data.keys())] + list(zip(*table_data.values())))
+
+fig8.write_image("result/fig8.png", width=1424, height=450, scale=2)
+fig8_json = fig8.to_json()
+
+# Calculate "Others" category for remaining authors
+others = total_changes_by_authors.sum() - top_x_authors.sum()
+if others > 0:
+    top_x_authors['Others'] = others
+
+# Prepare the data for Plotly
+data = top_x_authors.reset_index()
+data.columns = ['Author', 'Num_Changes']
+
+fig8b = px.pie(
+    data,
+    values='Num_Changes',
+    names='Author',
+    title=f"Top {num_top} Authors by Share of Changes in 12 months"
+)
+
+fig8b.write_image("result/fig8b.png", scale=2)
+fig8b_json = fig8b.to_json()
+
 # #5. Final Section of generation html reports
 
 # Building of  HTML report with js
@@ -342,9 +462,12 @@ html_js_report = (
         graph_js_template.format(content=fig1_json, div_name="fig1") +
         table_js_template.format(content=fig2_json, div_name="fig2") +
         table_js_template.format(content=fig7_json, div_name="fig7") +
+        graph_js_double_template.format(content1=fig2a_json, content2=fig7b_json, div_name1="fig2a",div_name2="fig7b") +
         graph_js_template.format(content=fig3_json, div_name="fig3") +
         graph_js_template.format(content=fig4_json, div_name="fig4") +
         table_js_template.format(content=fig5_json, div_name="fig5") +
+        table_js_template.format(content=fig8_json, div_name="fig8") +
+        graph_js_double_template.format(content1=fig5a_json, content2=fig8b_json, div_name1="fig5a",div_name2="fig8b") +
         graph_js_template.format(content=fig6_json, div_name="fig6") +
         tail_template
               )
@@ -355,9 +478,12 @@ html_image_report = (
         image_template.format(path="fig1.png") +
         table_image_template.format(path="fig2.png") +
         table_image_template.format(path="fig7.png") +
+        image_double_template.format(path1="fig2a.png", path2="fig7b.png" ) +
         image_template.format(path="fig3.png") +
         image_template.format(path="fig4.png") +
         table_image_template.format(path="fig5.png") +
+        table_image_template.format(path="fig8.png") +
+        image_double_template.format(path1="fig5a.png", path2="fig8b.png" ) +
         image_template.format(path="fig6.png") +
         tail_template
               )
