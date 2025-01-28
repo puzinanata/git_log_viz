@@ -10,6 +10,9 @@ from datetime import datetime, timedelta
 # Choose repository: put name of repo
 repo_name = 'neo-go'
 
+# Repo log
+repo_log_csv = "result/git_log_{}.csv".format(repo_name)
+
 # Choose Username or Email for author defining
 author = 'username'
 # author = 'email'
@@ -145,10 +148,10 @@ for line in lines:
 df = pd.DataFrame(commits)
 
 # Step 4: Save to CSV
-df.to_csv("result/git_log_with_changes.csv", index=False)
+df.to_csv(repo_log_csv, index=False)
 
 # #3. Section of data preparation
-df = pd.read_csv('result/git_log_with_changes.csv')
+df = pd.read_csv(repo_log_csv)
 
 df["date"] = pd.to_datetime(df["date"], utc=True)
 # Creation new columns
