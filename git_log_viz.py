@@ -7,14 +7,28 @@ from datetime import datetime, timedelta
 from src import settings
 from src import templates
 
-# Step 1: Command to extract data from git log
+# Command to extract data from git log
+command = "git log --pretty=format:'%H %ad %ae' --date=short --stat --no-merges"
 
-command = "cd {} ; git log --pretty=format:'%H %ad %ae' --date=short --stat --no-merges".format(settings.repo_name)
-result = subprocess.run(command, shell=True, text=True, capture_output=True)
+# Dictionary to store the log data for each repository
+repo_logs = {}
+
+# Loop for iteration through repos
+for repo in settings.repo_name:
+    repo_path = f"./{repo}"
+    result = subprocess.run(
+        f"cd {repo_path}; {command}",
+        shell=True,
+        text=True,
+        capture_output=True
+    )
+    if result.returncode == 0:
+        repo_logs[repo] = result.stdout
+    else:
+        print(f"Error retrieving data from {repo}: {result.stderr}")
+
 
 # Step 2: Process the output
-lines = result.stdout.splitlines()
-commits = []
 
 # Regex to match commit details and the summary line
 commit_pattern = r"^([a-f0-9]{40})\s+(\S+) (.*)"
@@ -27,32 +41,28 @@ commit_pattern = r"^([a-f0-9]{40})\s+(\S+) (.*)"
 #  2 file changed, 0 insertions(+)
 #  2 file changed, 0 deletions(-)
 summary_pattern = r"(\d+) files? \S+, (\d+) \S+?\([\+\-]\),? ?(\d+)?"
+commits = []
 
+# Process logs for each repository
+for repo, log_data in repo_logs.items():
+    lines = log_data.splitlines()
 
-# Parse the lines
-for line in lines:
-    commit_match = re.match(commit_pattern, line)
-    summary_match = re.search(summary_pattern, line)
+    for line in lines:
+        commit_match = re.match(commit_pattern, line)
+        summary_match = re.search(summary_pattern, line)
 
-    if commit_match:
-        # Start a new commit entry
-        commits.append({
-            "commit": commit_match.group(1),
-            "date": commit_match.group(2),
-            "email": commit_match.group(3),
-            "num_changes": 0,  # Placeholder for total changes
-        })
-    elif summary_match:
-        if summary_match.lastindex == 3:
-            # Update the last commit with summary data
-            num_insertions = int(summary_match.group(2))
-            num_deletions = int(summary_match.group(3))
+        if commit_match:
+            commits.append({
+                "repo": repo,
+                "commit": commit_match.group(1),
+                "date": commit_match.group(2),
+                "email": commit_match.group(3),
+                "num_changes": 0,  # Placeholder for total changes
+            })
+        elif summary_match and commits:
+            num_insertions = int(summary_match.group(2)) if summary_match.group(2) else 0
+            num_deletions = int(summary_match.group(3)) if summary_match.group(3) else 0
             commits[-1]["num_changes"] = num_insertions + num_deletions
-        elif summary_match.lastindex == 2:
-            commits[-1]["num_changes"] = int(summary_match.group(2))
-        else:
-            exit(1)
-
 
 # Step 3: Convert to a DataFrame
 df = pd.DataFrame(commits)
