@@ -7,12 +7,9 @@ from datetime import datetime, timedelta
 from src import settings
 from src import templates
 
-
-# #2. Section: CSV file generation from git logs
-
 # Step 1: Command to extract data from git log
 
-command = "cd ./git_repos/{} ; git log --pretty=format:'%H %ad %ae' --date=short --stat --no-merges".format(settings.repo_name)
+command = "cd {} ; git log --pretty=format:'%H %ad %ae' --date=short --stat --no-merges".format(settings.repo_name)
 result = subprocess.run(command, shell=True, text=True, capture_output=True)
 
 # Step 2: Process the output

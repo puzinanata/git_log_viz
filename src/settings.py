@@ -1,10 +1,10 @@
 # #0. Section: Report settings
 
 # Choose repository: put name of repo
-repo_name = 'neo-go'
+repo_name = './git_repos/neo-go'
 
 # Definition of name csv file
-repo_log_csv = "result/git_log_{}.csv".format(repo_name)
+repo_log_csv = "result/git_log_{}.csv".format(repo_name.split('/')[-1])
 
 # Choose Username or Email for author defining
 author = 'username'
