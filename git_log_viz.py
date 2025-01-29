@@ -4,28 +4,7 @@ import plotly.express as px
 import plotly.figure_factory as ff
 import pandas as pd
 from datetime import datetime, timedelta
-
-# #0. Section: Report settings
-
-# Choose repository: put name of repo
-repo_name = 'neo-go'
-
-# Repo log
-repo_log_csv = "result/git_log_{}.csv".format(repo_name)
-
-# Choose Username or Email for author defining
-author = 'username'
-# author = 'email'
-
-# Username to exclude
-exclude_username = []
-
-# Usernames to combine
-old_username = []
-new_username = []
-
-# Define number of top authors
-num_top = 5
+import variables as v
 
 # #1. Template section
 
@@ -99,7 +78,7 @@ table_image_template = """
 
 # Step 1: Command to extract data from git log
 
-command = "cd ./git_repos/{} ; git log --pretty=format:'%H %ad %ae' --date=short --stat --no-merges".format(repo_name)
+command = "cd ./git_repos/{} ; git log --pretty=format:'%H %ad %ae' --date=short --stat --no-merges".format(v.repo_name)
 result = subprocess.run(command, shell=True, text=True, capture_output=True)
 
 # Step 2: Process the output
@@ -148,10 +127,10 @@ for line in lines:
 df = pd.DataFrame(commits)
 
 # Step 4: Save to CSV
-df.to_csv(repo_log_csv, index=False)
+df.to_csv(v.repo_log_csv, index=False)
 
 # #3. Section of data preparation
-df = pd.read_csv(repo_log_csv)
+df = pd.read_csv(v.repo_log_csv)
 
 df["date"] = pd.to_datetime(df["date"], utc=True)
 # Creation new columns
@@ -166,10 +145,10 @@ df['month_year'] = pd.to_datetime(df['month_year'], format='%Y-%m')
 df['username'] = df['email'].str.split('@').str[0]
 
 # Exclude the username
-df = df[~df['username'].isin(exclude_username)]
+df = df[~df['username'].isin(v.exclude_username)]
 
 # Replace all occurrences of old username with new username
-df['username'] = df['username'].replace(old_username, new_username)
+df['username'] = df['username'].replace(v.old_username, v.new_username)
 
 # Transfer username to lower case
 df['username'] = df['username'].str.lower()
@@ -199,9 +178,9 @@ fig1_json = fig1.to_json()
 # Building graph table with top authors by count the commits
 
 # Grouped by year and author and count the commits
-commit_counts = df.groupby(['year', author]).size().reset_index(name='commit_count')
-total_commits_by_email = commit_counts.groupby(author)['commit_count'].sum()
-top_x_emails = total_commits_by_email.sort_values(ascending=False).head(num_top)
+commit_counts = df.groupby(['year', v.author]).size().reset_index(name='commit_count')
+total_commits_by_email = commit_counts.groupby(v.author)['commit_count'].sum()
+top_x_emails = total_commits_by_email.sort_values(ascending=False).head(v.num_top)
 
 total_commits = total_commits_by_email.sum()
 
@@ -230,7 +209,7 @@ fig2a = px.pie(
     data,
     values='Commits',
     names='Author',
-    title=f"Top {num_top} Authors by Commit Count by Years"
+    title=f"Top {v.num_top} Authors by Commit Count by Years"
 )
 
 fig2a.write_image("result/fig2a.png", scale=2)
@@ -239,15 +218,15 @@ fig2a_json = fig2a.to_json()
 # Building line chart  by top authors
 
 # Find the top X emails based on commit count
-top_emails = total_commits_by_email.nlargest(num_top).index
+top_emails = total_commits_by_email.nlargest(v.num_top).index
 
-top_commit_counts = commit_counts[commit_counts[author].isin(top_emails).sort_values(ascending=False)]
+top_commit_counts = commit_counts[commit_counts[v.author].isin(top_emails).sort_values(ascending=False)]
 
 fig3 = px.line(
     top_commit_counts,
     x="year",
     y="commit_count",
-    color=author,
+    color=v.author,
     title="Count of commits by top authors by years",
     markers=True)
 
@@ -303,9 +282,9 @@ fig4_json = fig4.to_json()
 # Building graph table with top authors by last 12 months
 
 # Grouped by year and email and count the commits
-commit_counts = filtered_df.groupby(['month_year', author]).size().reset_index(name='commit_count')
-total_commits_by_email = commit_counts.groupby(author)['commit_count'].sum()
-top_x_emails = total_commits_by_email.sort_values(ascending=False).head(num_top)
+commit_counts = filtered_df.groupby(['month_year', v.author]).size().reset_index(name='commit_count')
+total_commits_by_email = commit_counts.groupby(v.author)['commit_count'].sum()
+top_x_emails = total_commits_by_email.sort_values(ascending=False).head(v.num_top)
 
 total_commits = total_commits_by_email.sum()
 
@@ -334,7 +313,7 @@ fig5a = px.pie(
     data,
     values='Commits',
     names='Author',
-    title=f"Top {num_top} Authors by Commit Count in 12 months"
+    title=f"Top {v.num_top} Authors by Commit Count in 12 months"
 )
 
 fig5a.write_image("result/fig5a.png", scale=2)
@@ -343,15 +322,15 @@ fig5a_json = fig5a.to_json()
 # Building line chart  by top authors
 
 # Find the top X emails based on commit count
-top_emails = total_commits_by_email.nlargest(num_top).index
+top_emails = total_commits_by_email.nlargest(v.num_top).index
 
-top_commit_counts = commit_counts[commit_counts[author].isin(top_emails).sort_values(ascending=False)]
+top_commit_counts = commit_counts[commit_counts[v.author].isin(top_emails).sort_values(ascending=False)]
 
 fig6 = px.line(
     top_commit_counts,
     x="month_year",
     y="commit_count",
-    color=author,
+    color=v.author,
     title="Count of commits by top authors by last 12 months",
     markers=True)
 
@@ -378,11 +357,11 @@ fig6_json = fig6.to_json()
 # Building graph table with top authors by sum of changes
 
 # Grouped by year and author and sum of changes
-sum_changes = df.groupby(['year', author]).sum('num_changes')
+sum_changes = df.groupby(['year', v.author]).sum('num_changes')
 
-total_changes_by_authors = sum_changes.groupby(author)['num_changes'].sum()
+total_changes_by_authors = sum_changes.groupby(v.author)['num_changes'].sum()
 
-top_x_authors = total_changes_by_authors.sort_values(ascending=False).head(num_top)
+top_x_authors = total_changes_by_authors.sort_values(ascending=False).head(v.num_top)
 
 total_changes = total_changes_by_authors.sum()
 
@@ -411,7 +390,7 @@ fig7b = px.pie(
     data,
     values='Num_Changes',
     names='Author',
-    title=f"Top {num_top} Authors by Share of Changes by Years"
+    title=f"Top {v.num_top} Authors by Share of Changes by Years"
 )
 
 fig7b.write_image("result/fig7b.png", scale=2)
@@ -420,9 +399,9 @@ fig7b_json = fig7b.to_json()
 # Building graph table with top authors by sum of changes for the last 12 months
 
 # Grouped by year and author and sum of changes
-sum_changes = filtered_df.groupby(['month_year', author]).sum('num_changes')
-total_changes_by_authors = sum_changes.groupby(author)['num_changes'].sum()
-top_x_authors = total_changes_by_authors.sort_values(ascending=False).head(num_top)
+sum_changes = filtered_df.groupby(['month_year', v.author]).sum('num_changes')
+total_changes_by_authors = sum_changes.groupby(v.author)['num_changes'].sum()
+top_x_authors = total_changes_by_authors.sort_values(ascending=False).head(v.num_top)
 
 total_changes = total_changes_by_authors.sum()
 
@@ -451,7 +430,7 @@ fig8b = px.pie(
     data,
     values='Num_Changes',
     names='Author',
-    title=f"Top {num_top} Authors by Share of Changes in 12 months"
+    title=f"Top {v.num_top} Authors by Share of Changes in 12 months"
 )
 
 fig8b.write_image("result/fig8b.png", scale=2)
