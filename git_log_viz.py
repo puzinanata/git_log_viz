@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from src import settings
 from src import templates
 
+
 # Command to extract data from git log
 command = "git log --pretty=format:'%H %ad %ae' --stat --no-merges"
 
@@ -52,6 +53,7 @@ commit_pattern = r"^([a-f0-9]{40})\s+(\S+ \S+ \d+ [0-9:]{8} [0-9]{4} .?[0-9\+\-]
 #  2 file changed, 0 insertions(+)
 #  2 file changed, 0 deletions(-)
 summary_pattern = r"(\d+) files? \S+, (\d+) \S+?\([\+\-]\),? ?(\d+)?"
+hour_pattern = r"(\d{2}):\d{2}:\d{2}"
 
 commits = {}
 
@@ -67,25 +69,30 @@ for repo_log, log_csv in zip(repo_logs.items(), settings.repo_log_csv):
         summary_match = re.search(summary_pattern, line)
 
         if commit_match:
+            timestamp = commit_match.group(2)
+            hour_match = re.search(hour_pattern, timestamp)
+
             commits[log_csv].append({
                 "repo": repo,
                 "commit": commit_match.group(1),
                 "date": commit_match.group(2),
+                "hour": int(hour_match.group(1)) if hour_match else 0,
                 "email": commit_match.group(3),
-                "num_changes": 0,  # Placeholder for total changes
+                "num_changes": 0,
             })
         elif summary_match and commits[log_csv]:
             num_insertions = int(summary_match.group(2)) if summary_match.group(2) else 0
             num_deletions = int(summary_match.group(3)) if summary_match.group(3) else 0
             commits[log_csv][-1]["num_changes"] = num_insertions + num_deletions
-    # Step 4: Save git log from repo to separate CSV file
-    pd.DataFrame(commits[log_csv]).to_csv(log_csv, index=False)
-    print("lol")
 
-# #3. Read data from cvs
+    # Save git log from repo to separate CSV file
+    pd.DataFrame(commits[log_csv]).to_csv(log_csv, index=False)
+
+# Read data from cvs
 df = pd.concat([pd.read_csv(file) for file in settings.repo_log_csv], ignore_index=True)
 
 df["date"] = pd.to_datetime(df["date"], utc=True)
+
 # Creation new columns
 df["year"] = df["date"].dt.year
 df["year"] = df["year"].astype(int)
