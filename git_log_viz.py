@@ -8,7 +8,7 @@ from src import settings
 from src import templates
 
 # Command to extract data from git log
-command = "git log --pretty=format:'%H %ad %ae' --date=short --stat --no-merges"
+command = "git log --pretty=format:'%H %ad %ae' --stat --no-merges"
 
 # Dictionary to store the log data for each repository
 repo_logs = {}
@@ -31,7 +31,13 @@ for repo in settings.repo_name:
 # Step 2: Process the output
 
 # Regex to match commit details and the summary line
-commit_pattern = r"^([a-f0-9]{40})\s+(\S+) (.*)"
+
+# commit_pattern covers following cases:
+# 47b679341b5d2051cce591af65f51e22be051c28 Fri Dec 27 12:16:48 2024 +0300 user@example.com
+# 47b679341b5d2051cce591af65f51e22be051c28 Fri Dec 27 12:16:48 2024 -0300 user@example.com
+# 47b679341b5d2051cce591af65f51e22be051c28 Fri Dec 27 12:16:48 2024 0000 user@example.com
+# 00a9376311c94680e83bdd05f5e9d398869a2bd7 Wed Sep 7 22:38:54 2022 +0300 user@example.com
+commit_pattern = r"^([a-f0-9]{40})\s+(\S+ \S+ \d+ [0-9:]{8} [0-9]{4} .?[0-9\+\-]{4}) (.*)"
 
 #  summary_pattern covers following cases:
 #  2 files changed, 0 insertions(+), 0 deletions(-)
@@ -41,6 +47,7 @@ commit_pattern = r"^([a-f0-9]{40})\s+(\S+) (.*)"
 #  2 file changed, 0 insertions(+)
 #  2 file changed, 0 deletions(-)
 summary_pattern = r"(\d+) files? \S+, (\d+) \S+?\([\+\-]\),? ?(\d+)?"
+
 commits = []
 
 # Process logs for each repository
@@ -309,7 +316,8 @@ total_changes = total_changes_by_authors.sum()
 table_data = {
     "Rank": list(range(1, len(top_x_authors) + 1)),
     "Author": top_x_authors.index.tolist(),
-    "Total Changes (insertions+deletions)": [f"{value:,}".replace(",", " ") for value in (top_x_authors.values.tolist())],
+    "Total Changes (insertions+deletions)":
+        [f"{value:,}".replace(",", " ") for value in (top_x_authors.values.tolist())],
     "Share of Author in %": (top_x_authors.values/total_changes * 100).round(0).astype(int).tolist()
 }
 
@@ -349,7 +357,8 @@ total_changes = total_changes_by_authors.sum()
 table_data = {
     "Rank": list(range(1, len(top_x_authors) + 1)),
     "Author": top_x_authors.index.tolist(),
-    "Total Changes (insertions+deletions)": [f"{value:,}".replace(",", " ") for value in (top_x_authors.values.tolist())],
+    "Total Changes (insertions+deletions)":
+        [f"{value:,}".replace(",", " ") for value in (top_x_authors.values.tolist())],
     "Share of Author in %": (top_x_authors.values/total_changes * 100).round(0).astype(int).tolist()
 }
 
@@ -385,12 +394,14 @@ html_js_report = (
         templates.graph_js_template.format(content=fig1_json, div_name="fig1") +
         templates.table_js_template.format(content=fig2_json, div_name="fig2") +
         templates.table_js_template.format(content=fig7_json, div_name="fig7") +
-        templates.graph_js_double_template.format(content1=fig2a_json, content2=fig7b_json, div_name1="fig2a",div_name2="fig7b") +
+        templates.graph_js_double_template.format(
+            content1=fig2a_json, content2=fig7b_json, div_name1="fig2a", div_name2="fig7b") +
         templates.graph_js_template.format(content=fig3_json, div_name="fig3") +
         templates.graph_js_template.format(content=fig4_json, div_name="fig4") +
         templates.table_js_template.format(content=fig5_json, div_name="fig5") +
         templates.table_js_template.format(content=fig8_json, div_name="fig8") +
-        templates.graph_js_double_template.format(content1=fig5a_json, content2=fig8b_json, div_name1="fig5a",div_name2="fig8b") +
+        templates.graph_js_double_template.format(
+            content1=fig5a_json, content2=fig8b_json, div_name1="fig5a", div_name2="fig8b") +
         templates.graph_js_template.format(content=fig6_json, div_name="fig6") +
         templates.tail_template
               )
@@ -401,12 +412,12 @@ html_image_report = (
         templates.image_template.format(path="fig1.png") +
         templates.table_image_template.format(path="fig2.png") +
         templates.table_image_template.format(path="fig7.png") +
-        templates.image_double_template.format(path1="fig2a.png", path2="fig7b.png" ) +
+        templates.image_double_template.format(path1="fig2a.png", path2="fig7b.png") +
         templates.image_template.format(path="fig3.png") +
         templates.image_template.format(path="fig4.png") +
         templates.table_image_template.format(path="fig5.png") +
         templates.table_image_template.format(path="fig8.png") +
-        templates.image_double_template.format(path1="fig5a.png", path2="fig8b.png" ) +
+        templates.image_double_template.format(path1="fig5a.png", path2="fig8b.png") +
         templates.image_template.format(path="fig6.png") +
         templates.tail_template
               )
