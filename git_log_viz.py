@@ -1,5 +1,6 @@
 import subprocess
 import re
+import os
 import plotly.express as px
 import plotly.figure_factory as ff
 import pandas as pd
@@ -14,18 +15,22 @@ command = "git log --pretty=format:'%H %ad %ae' --stat --no-merges"
 repo_logs = {}
 
 # Loop for iteration through repos
-for repo in settings.repo_name:
-    repo_path = f"./{repo}"
-    result = subprocess.run(
-        f"cd {repo_path}; {command}",
-        shell=True,
-        text=True,
-        capture_output=True
-    )
-    if result.returncode == 0:
-        repo_logs[repo] = result.stdout
+for repo_path, repo_csv in zip(settings.repo_name, settings.repo_log_csv):
+
+    if not os.path.exists(repo_csv):
+        print(f"DB csv file '{repo_csv}' doesn't exist.")
+        result = subprocess.run(
+            f"cd {repo_path}; {command}",
+            shell=True,
+            text=True,
+            capture_output=True
+        )
+        if result.returncode == 0:
+            repo_logs[repo_path] = result.stdout
+        else:
+            print(f"Error retrieving data from {repo_path}: {result.stderr}")
     else:
-        print(f"Error retrieving data from {repo}: {result.stderr}")
+        print(f"DB csv file '{repo_csv}' exist so do it fast.")
 
 
 # Step 2: Process the output
@@ -48,37 +53,37 @@ commit_pattern = r"^([a-f0-9]{40})\s+(\S+ \S+ \d+ [0-9:]{8} [0-9]{4} .?[0-9\+\-]
 #  2 file changed, 0 deletions(-)
 summary_pattern = r"(\d+) files? \S+, (\d+) \S+?\([\+\-]\),? ?(\d+)?"
 
-commits = []
+commits = {}
 
 # Process logs for each repository
-for repo, log_data in repo_logs.items():
+for repo_log, log_csv in zip(repo_logs.items(), settings.repo_log_csv):
+    log_data = repo_log[1]
+    repo = repo_log[0]
     lines = log_data.splitlines()
+    commits[log_csv] = []
 
     for line in lines:
         commit_match = re.match(commit_pattern, line)
         summary_match = re.search(summary_pattern, line)
 
         if commit_match:
-            commits.append({
+            commits[log_csv].append({
                 "repo": repo,
                 "commit": commit_match.group(1),
                 "date": commit_match.group(2),
                 "email": commit_match.group(3),
                 "num_changes": 0,  # Placeholder for total changes
             })
-        elif summary_match and commits:
+        elif summary_match and commits[log_csv]:
             num_insertions = int(summary_match.group(2)) if summary_match.group(2) else 0
             num_deletions = int(summary_match.group(3)) if summary_match.group(3) else 0
-            commits[-1]["num_changes"] = num_insertions + num_deletions
+            commits[log_csv][-1]["num_changes"] = num_insertions + num_deletions
+    # Step 4: Save git log from repo to separate CSV file
+    pd.DataFrame(commits[log_csv]).to_csv(log_csv, index=False)
+    print("lol")
 
-# Step 3: Convert to a DataFrame
-df = pd.DataFrame(commits)
-
-# Step 4: Save to CSV
-df.to_csv(settings.repo_log_csv, index=False)
-
-# #3. Section of data preparation
-df = pd.read_csv(settings.repo_log_csv)
+# #3. Read data from cvs
+df = pd.concat([pd.read_csv(file) for file in settings.repo_log_csv], ignore_index=True)
 
 df["date"] = pd.to_datetime(df["date"], utc=True)
 # Creation new columns

@@ -2,15 +2,13 @@
 
 # Choose repository: put name of repo
 repo_name = [
-    './git_repos/neo-go',
-    './git_repos/neo',
-    './git_repos/neofs-node',
-    './git_repos/neofs-sdk-go',
+    './git_repos/cpython',
     ]
 
-# Definition of name csv file
-#repo_log_csv = "result/git_log_{}.csv".format(repo_name.split('/')[-1])
-repo_log_csv = "result/git_log.csv"
+# Definition of name csv file(-s)
+repo_log_csv = []
+for repo in repo_name:
+    repo_log_csv.append("result/git_log_{}.csv".format(repo.split('/')[-1]))
 
 # Choose Username or Email for author defining
 author = 'username'
