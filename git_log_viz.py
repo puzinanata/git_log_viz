@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 from src import settings
 from src import templates
 
-
 # Command to extract data from git log
 command = "git log --pretty=format:'%H %ad %ae' --stat --no-merges"
 
@@ -96,7 +95,7 @@ df["date"] = pd.to_datetime(df["date"], utc=True)
 # Creation new columns
 df["year"] = df["date"].dt.year
 df["year"] = df["year"].astype(int)
-
+df["utc_hour"] = df["date"].dt.hour
 df["month_year"] = df["date"].dt.strftime('%Y-%m')
 df['month_year'] = pd.to_datetime(df['month_year'], format='%Y-%m')
 
@@ -398,6 +397,47 @@ fig8b = px.pie(
 fig8b.write_image("result/fig8b.png", scale=2)
 fig8b_json = fig8b.to_json()
 
+# Building heatmap graph with distribution commits by hours by top authors
+
+# Aggregate commits by hour and author (username)
+commit_counts = df.groupby([settings.hour, settings.author]).size().unstack(fill_value=0)
+# Get top 10 authors by total commit count
+top_x_authors = commit_counts.sum(axis=0).nlargest(settings.num_top).index
+# Filter to include only top 10 authors
+commit_counts_top10 = commit_counts[top_x_authors]
+# Normalize the commit counts to percentages (each author's commits by hour / total commits for the author)
+commit_counts_top10_percent = commit_counts_top10.div(commit_counts_top10.sum(axis=0), axis=1) * 100
+# Convert to long format for Plotly
+df_long = commit_counts_top10_percent.reset_index().melt(
+    id_vars=settings.hour,
+    var_name=settings.author,
+    value_name='percentage'
+)
+
+# Create heatmap using Plotly
+fig9 = px.density_heatmap(
+    df_long,
+    x=settings.hour,
+    y=settings.author,
+    z="percentage",
+    color_continuous_scale="YlGnBu",
+    title="Distribution of Commits by Hour for Top Authors (as Percentage)",
+    text_auto=".0f",
+)
+
+# Adjust x-axis for better readability
+fig9.update_xaxes(type='category', title="Hour of the Day", tickmode="linear", dtick=1)
+
+# Center the title & improve layout
+fig9.update_layout(
+    title_x=0.5,
+    yaxis_title="Author",
+    coloraxis_colorbar_title="Percentage"
+)
+
+fig9.write_image("result/fig9.png", width=1409, height=450, scale=2)
+fig9_json = fig9.to_json()
+
 # #5. Final Section of generation html reports
 
 # Building of  HTML report with js
@@ -415,6 +455,7 @@ html_js_report = (
         templates.graph_js_double_template.format(
             content1=fig5a_json, content2=fig8b_json, div_name1="fig5a", div_name2="fig8b") +
         templates.graph_js_template.format(content=fig6_json, div_name="fig6") +
+        templates.graph_js_template.format(content=fig9_json, div_name="fig9") +
         templates.tail_template
               )
 
@@ -431,6 +472,7 @@ html_image_report = (
         templates.table_image_template.format(path="fig8.png") +
         templates.image_double_template.format(path1="fig5a.png", path2="fig8b.png") +
         templates.image_template.format(path="fig6.png") +
+        templates.image_template.format(path="fig9.png") +
         templates.tail_template
               )
 

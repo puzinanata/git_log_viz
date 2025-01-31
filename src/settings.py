@@ -23,3 +23,7 @@ new_username = []
 
 # Define number of top authors
 num_top = 10
+
+# Choose local hour or UTC hour
+# hour = 'hour'
+hour = 'utc_hour'
