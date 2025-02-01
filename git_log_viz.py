@@ -100,7 +100,6 @@ df["utc_hour"] = df["date"].dt.hour
 df["month_year"] = df["date"].dt.strftime('%Y-%m')
 df['month_year'] = pd.to_datetime(df['month_year'], format='%Y-%m')
 
-
 # Extract the part before '@' to create new column 'Username'
 df['username'] = df['email'].str.split('@').str[0]
 
@@ -112,6 +111,9 @@ df['username'] = df['username'].replace(settings.old_username, settings.new_user
 
 # Transfer username to lower case
 df['username'] = df['username'].str.lower()
+
+# Filter years
+df= df[(df['date'].dt.year >= settings.start_year) & (df['date'].dt.year <= settings.finish_year)]
 
 # #4. Section of graphs building
 
@@ -210,6 +212,45 @@ fig3.update_layout(
 fig3.write_image("result/fig3.png", width=1409, height=450, scale=2)
 fig3_json = fig3.to_json()
 
+# Building heatmap graph with distribution commits by hours by top authors for all years
+
+# Aggregate commits by hour
+commit_counts = df.groupby(settings.hour).size()
+commit_counts_all_percent = (commit_counts / commit_counts.sum()) * 100
+
+df_all = commit_counts_all_percent.reset_index()
+df_all.columns = [settings.hour, 'percentage']
+df_all['author'] = 'All Users'
+
+# Create heatmap using Plotly
+fig12 = px.density_heatmap(
+    df_all,
+    x=settings.hour,
+    y='author',
+    z="percentage",
+    color_continuous_scale="YlGnBu",
+    title="Distribution of Commits by Hour for All Authors (as Percentage) for All Years",
+)
+
+# Add text annotations using a scatter plot
+fig12.add_trace(go.Scatter(
+    x=df_all[settings.hour],
+    y=df_all['author'],
+    text=df_all["percentage"].round(0).astype(int),
+    mode="text",
+    textposition="middle center",
+    textfont=dict(size=12, color="black"),
+    )
+)
+
+fig12.update_xaxes(type='category', title="Hour of the Day", tickmode="linear", dtick=1)
+
+fig12.update_layout(
+    title_x=0.5,
+)
+
+fig12.write_image("result/fig12.png", width=1409, height=450, scale=2)
+fig12_json = fig12.to_json()
 
 # Building line chart by last 12 months before current date
 
@@ -361,6 +402,45 @@ fig10.update_layout(
 fig10.write_image("result/fig10.png", width=1409, height=450, scale=2)
 fig10_json = fig10.to_json()
 
+# Building heatmap graph with distribution commits by hours by top authors by last 12 months
+
+# Aggregate commits by hour
+commit_counts_12m = filtered_df.groupby(settings.hour).size()
+commit_counts_all_percent = (commit_counts_12m / commit_counts_12m.sum()) * 100
+
+df_all = commit_counts_all_percent.reset_index()
+df_all.columns = [settings.hour, 'percentage']
+df_all['author'] = 'All Users'
+
+# Create heatmap using Plotly
+fig11 = px.density_heatmap(
+    df_all,
+    x=settings.hour,
+    y='author',
+    z="percentage",
+    color_continuous_scale="YlGnBu",
+    title="Distribution of Commits by Hour for All Authors (as Percentage) for the last 12 months",
+)
+
+# Add text annotations using a scatter plot
+fig11.add_trace(go.Scatter(
+    x=df_all[settings.hour],
+    y=df_all['author'],
+    text=df_all["percentage"].round(0).astype(int),
+    mode="text",
+    textposition="middle center",
+    textfont=dict(size=12, color="black"),
+    )
+)
+
+fig11.update_xaxes(type='category', title="Hour of the Day", tickmode="linear", dtick=1)
+
+fig11.update_layout(
+    title_x=0.5,
+)
+
+fig11.write_image("result/fig11.png", width=1409, height=450, scale=2)
+fig11_json = fig11.to_json()
 
 # Building graph table with top authors by sum of changes
 
@@ -491,8 +571,6 @@ fig9.update_layout(
 fig9.write_image("result/fig9.png", width=1409, height=450, scale=2)
 fig9_json = fig9.to_json()
 
-
-
 # #5. Final Section of generation html reports
 
 # Building of  HTML report with js
@@ -505,6 +583,7 @@ html_js_report = (
             content1=fig2a_json, content2=fig7b_json, div_name1="fig2a", div_name2="fig7b") +
         templates.graph_js_template.format(content=fig3_json, div_name="fig3") +
         templates.graph_js_template.format(content=fig9_json, div_name="fig9") +
+        templates.graph_js_template.format(content=fig12_json, div_name="fig12") +
         templates.graph_js_template.format(content=fig4_json, div_name="fig4") +
         templates.table_js_template.format(content=fig5_json, div_name="fig5") +
         templates.table_js_template.format(content=fig8_json, div_name="fig8") +
@@ -512,6 +591,7 @@ html_js_report = (
             content1=fig5a_json, content2=fig8b_json, div_name1="fig5a", div_name2="fig8b") +
         templates.graph_js_template.format(content=fig6_json, div_name="fig6") +
         templates.graph_js_template.format(content=fig10_json, div_name="fig10") +
+        templates.graph_js_template.format(content=fig11_json, div_name="fig11") +
         templates.tail_template
               )
 
@@ -524,12 +604,14 @@ html_image_report = (
         templates.image_double_template.format(path1="fig2a.png", path2="fig7b.png") +
         templates.image_template.format(path="fig3.png") +
         templates.image_template.format(path="fig9.png") +
+        templates.image_template.format(path="fig12.png") +
         templates.image_template.format(path="fig4.png") +
         templates.table_image_template.format(path="fig5.png") +
         templates.table_image_template.format(path="fig8.png") +
         templates.image_double_template.format(path1="fig5a.png", path2="fig8b.png") +
         templates.image_template.format(path="fig6.png") +
         templates.image_template.format(path="fig10.png") +
+        templates.image_template.format(path="fig11.png") +
         templates.tail_template
               )
 

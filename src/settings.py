@@ -1,9 +1,12 @@
 # #0. Section: Report settings
 
 # Choose repository: put name of repo
-repo_name = [
-    './git_repos/cpython',
-    ]
+repo_name = (
+    './git_repos/neo',
+    './git_repos/neo-go',
+    './git_repos/neofs-node',
+    './git_repos/neofs-sdk-go',
+    )
 
 # Definition of name csv file(-s)
 repo_log_csv = []
@@ -27,3 +30,7 @@ num_top = 10
 # Choose local hour or UTC hour
 # hour = 'hour'
 hour = 'utc_hour'
+
+# Choose years for report
+start_year = 2020
+finish_year = 2024
