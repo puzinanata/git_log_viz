@@ -32,5 +32,5 @@ num_top = 10
 hour = 'utc_hour'
 
 # Choose years for report
-start_year = 2020
+start_year = 1900
 finish_year = 2024
