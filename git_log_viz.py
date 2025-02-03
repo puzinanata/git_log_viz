@@ -6,6 +6,7 @@ import plotly.figure_factory as ff
 import pandas as pd
 from src import settings
 from src import templates
+from src import graph
 import plotly.graph_objects as go
 
 # Command to extract data from git log
@@ -120,28 +121,29 @@ df = df[(df['date'].dt.year >= settings.start_year) & (df['date'].dt.year <= set
 # Filter last year and creation filtered df with data fot the last year
 last_year = pd.Timestamp.today().year - 1
 last_year_df = df[df['month_year'].dt.year == last_year]
+monthly_counts = last_year_df.groupby(['month_year'])['commit'].count().reset_index()
 
 # Section of graphs building
 
-# Building line chart with commits by years.
+# Building line chart with commits by year.
+fig1_json = graph.graph_type_1(
+    df,
+    "result/fig1.png",
+    "year",
+    "Count of commits by Year",
+    '1'
+   )
 
-# Group by 'year' and count the 'commit' occurrences
-yearly_counts = df.groupby('year')['commit'].count().reset_index()
-yearly_counts.columns = ['year', 'commit_count']
-fig1 = px.line(yearly_counts, x='year', y='commit_count', title='Count of commits by Year', markers=True)
+# Building line chart by last year
 
-fig1.update_layout(
-    title_x=0.5,
-    xaxis=dict(
-        tickmode='linear',  # Ensure linear ticks (e.g., 2018, 2019, ...)
-        tick0=yearly_counts['year'].min(),  # Start ticks from the minimum year
-        dtick=1  # Interval between ticks
-    )
-)
-
-fig1.write_image("result/fig1.png", width=1424, height=450, scale=2)
-fig1_json = fig1.to_json()
-
+fig4_json = graph.graph_type_1(
+    last_year_df,
+    "result/fig4.png",
+    "month_year",
+    "Count of commits by last year",
+    'M1',
+    '%Y-%B'
+   )
 
 # Building graph table with top authors by count the commits
 
@@ -189,6 +191,7 @@ fig2a_json = fig2a.to_json()
 top_emails = total_commits_by_email.nlargest(settings.num_top).index
 top_commit_counts = commit_counts[commit_counts[settings.author].isin(top_emails).sort_values(ascending=False)]
 
+yearly_counts = df.groupby('year')['commit'].count().reset_index()
 fig3 = px.line(
     top_commit_counts,
     x="year",
@@ -257,31 +260,6 @@ fig12.update_layout(
 fig12.write_image("result/fig12.png", width=1409, height=450, scale=2)
 fig12_json = fig12.to_json()
 
-# Building line chart by last year before current date
-
-# Group by 'month_year' and count the 'commit' occurrences
-monthly_counts = last_year_df.groupby(['month_year'])['commit'].count().reset_index()
-monthly_counts.columns = ['month_year', 'commit_count']
-fig4 = px.line(
-    monthly_counts,
-    x='month_year',
-    y='commit_count',
-    title='Count of commits by last year',
-    markers=True
-)
-
-fig4.update_layout(
-    title_x=0.5,
-    xaxis_tickformat='%Y-%B',
-    xaxis=dict(
-        tickmode='linear',
-        tick0=monthly_counts['month_year'].min(),
-        dtick='M1'
-    )
-)
-
-fig4.write_image("result/fig4.png", width=1424, height=450, scale=2)
-fig4_json = fig4.to_json()
 
 # Building graph table with top authors by last year
 
