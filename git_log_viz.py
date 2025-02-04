@@ -122,49 +122,51 @@ df = df[(df['date'].dt.year >= settings.start_year) & (df['date'].dt.year <= set
 last_year = pd.Timestamp.today().year - 1
 last_year_df = df[df['month_year'].dt.year == last_year]
 monthly_counts = last_year_df.groupby(['month_year'])['commit'].count().reset_index()
+commit_counts = df.groupby(['year', settings.author]).size().reset_index(name='commit_count')
+total_commits_by_email = commit_counts.groupby(settings.author)['commit_count'].sum()
+top_x_emails = total_commits_by_email.sort_values(ascending=False).head(settings.num_top)
 
 # Section of graphs building
 
 # Building line chart with commits by year.
-fig1_json = graph.graph_type_1(
+fig1_json = graph.graph_line(
     df,
     "result/fig1.png",
     "year",
     "Count of commits by Year",
     '1'
-   )
+)
 
 # Building line chart by last year
 
-fig4_json = graph.graph_type_1(
+fig4_json = graph.graph_line(
     last_year_df,
     "result/fig4.png",
     "month_year",
     "Count of commits by last year",
-    'M1',
-    '%Y-%B'
-   )
+    'M1'
+)
 
-# Building graph table with top authors by count the commits
+# Building graph table with top authors by count the commits for all years
 
-# Grouped by year and author and count the commits
-commit_counts = df.groupby(['year', settings.author]).size().reset_index(name='commit_count')
-total_commits_by_email = commit_counts.groupby(settings.author)['commit_count'].sum()
-top_x_emails = total_commits_by_email.sort_values(ascending=False).head(settings.num_top)
+fig2_json = graph.graph_table(
+    df,
+    "result/fig2.png",
+    'year',
+    settings.author,
+    settings.num_top
+)
 
-total_commits = total_commits_by_email.sum()
+# Building graph table with top authors by last year
 
-table_data = {
-    "Rank": list(range(1, len(top_x_emails) + 1)),
-    "Author": top_x_emails.index.tolist(),
-    "Total Commits": [f"{value:,}".replace(",", " ") for value in (top_x_emails.values.tolist())],
-    "Share of Author in %": (top_x_emails.values/total_commits * 100).round(0).astype(int).tolist()
-}
+fig5_json = graph.graph_table(
+    last_year_df,
+   "result/fig5.png",
+   'month_year',
+    settings.author,
+    settings.num_top
+)
 
-fig2 = ff.create_table([list(table_data.keys())] + list(zip(*table_data.values())))
-
-fig2.write_image("result/fig2.png", width=1424, height=450, scale=2)
-fig2_json = fig2.to_json()
 
 # Calculate "Others" category for remaining authors
 others = total_commits_by_email.sum() - top_x_emails.sum()
@@ -261,27 +263,6 @@ fig12.write_image("result/fig12.png", width=1409, height=450, scale=2)
 fig12_json = fig12.to_json()
 
 
-# Building graph table with top authors by last year
-
-# Grouped by year and email and count the commits
-commit_counts = last_year_df.groupby(['month_year', settings.author]).size().reset_index(name='commit_count')
-total_commits_by_email = commit_counts.groupby(settings.author)['commit_count'].sum()
-top_x_emails = total_commits_by_email.sort_values(ascending=False).head(settings.num_top)
-
-total_commits = total_commits_by_email.sum()
-
-table_data = {
-    "Rank": list(range(1, len(top_x_emails) + 1)),
-    "Author": top_x_emails.index.tolist(),
-    "Total Commits": [f"{value:,}".replace(",", " ") for value in (top_x_emails.values.tolist())],
-    "Share of Author in %": (top_x_emails.values/total_commits * 100).round(0).astype(int).tolist()
-}
-
-fig5 = ff.create_table([list(table_data.keys())] + list(zip(*table_data.values())))
-
-fig5.write_image("result/fig5.png", width=1424, height=450, scale=2)
-fig5_json = fig5.to_json()
-
 # Calculate "Others" category for remaining authors
 others = total_commits_by_email.sum() - top_x_emails.sum()
 if others > 0:
@@ -301,9 +282,11 @@ fig5a = px.pie(
 fig5a.write_image("result/fig5a.png", scale=2)
 fig5a_json = fig5a.to_json()
 
+
 # Building line chart  by top authors
 
 # Find the top X emails based on commit count
+commit_counts = df.groupby(['month_year', settings.author]).size().reset_index(name='commit_count')
 top_emails = total_commits_by_email.nlargest(settings.num_top).index
 top_commit_counts = commit_counts[commit_counts[settings.author].isin(top_emails).sort_values(ascending=False)]
 
