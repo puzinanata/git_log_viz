@@ -121,6 +121,7 @@ df = df[(df['date'].dt.year >= settings.start_year) & (df['date'].dt.year <= set
 # Filter last year and creation filtered df with data fot the last year
 last_year = pd.Timestamp.today().year - 1
 last_year_df = df[df['month_year'].dt.year == last_year]
+
 monthly_counts = last_year_df.groupby(['month_year'])['commit'].count().reset_index()
 commit_counts = df.groupby(['year', settings.author]).size().reset_index(name='commit_count')
 total_commits_by_email = commit_counts.groupby(settings.author)['commit_count'].sum()
@@ -128,7 +129,7 @@ top_x_emails = total_commits_by_email.sort_values(ascending=False).head(settings
 
 # Section of graphs building
 
-# Building line chart with commits by year.
+# Building line chart with total commits by year.
 fig1_json = graph.graph_line(
     df,
     "result/fig1.png",
@@ -137,7 +138,7 @@ fig1_json = graph.graph_line(
     '1'
 )
 
-# Building line chart by last year
+# Building line chart with total commits by last year.
 
 fig4_json = graph.graph_line(
     last_year_df,
@@ -154,17 +155,46 @@ fig2_json = graph.graph_table(
     "result/fig2.png",
     'year',
     settings.author,
-    settings.num_top
+    settings.num_top,
+    'commit_count',
+    "Total Commits"
 )
 
-# Building graph table with top authors by last year
+# Building graph table with top authors by count the commits by last year
 
 fig5_json = graph.graph_table(
     last_year_df,
-   "result/fig5.png",
-   'month_year',
+    "result/fig5.png",
+    'month_year',
     settings.author,
-    settings.num_top
+    settings.num_top,
+    'commit_count',
+    "Total Commits"
+)
+
+# Building graph table with top authors by sum of changes for all years
+
+fig7_json = graph.graph_table(
+    df,
+    "result/fig7.png",
+    'year',
+    settings.author,
+    settings.num_top,
+    'num_changes',
+    "Total Changes (insertions+deletions)"
+)
+
+
+# Building graph table with top authors by sum of changes for last years
+
+fig8_json = graph.graph_table(
+    last_year_df,
+    "result/fig8.png",
+    'month_year',
+    settings.author,
+    settings.num_top,
+    'num_changes',
+    "Total Changes (insertions+deletions)"
 )
 
 
@@ -283,10 +313,10 @@ fig5a.write_image("result/fig5a.png", scale=2)
 fig5a_json = fig5a.to_json()
 
 
-# Building line chart  by top authors
+# Building line chart  by top authors for last year
 
 # Find the top X emails based on commit count
-commit_counts = df.groupby(['month_year', settings.author]).size().reset_index(name='commit_count')
+commit_counts = last_year_df.groupby(['month_year', settings.author]).size().reset_index(name='commit_count')
 top_emails = total_commits_by_email.nlargest(settings.num_top).index
 top_commit_counts = commit_counts[commit_counts[settings.author].isin(top_emails).sort_values(ascending=False)]
 
@@ -406,28 +436,10 @@ fig11.update_layout(
 fig11.write_image("result/fig11.png", width=1409, height=450, scale=2)
 fig11_json = fig11.to_json()
 
-# Building graph table with top authors by sum of changes
-
-# Grouped by year and author and sum of changes
+# Calculate "Others" category for remaining authors
 sum_changes = df.groupby(['year', settings.author]).sum('num_changes')
 total_changes_by_authors = sum_changes.groupby(settings.author)['num_changes'].sum()
 top_x_authors = total_changes_by_authors.sort_values(ascending=False).head(settings.num_top)
-total_changes = total_changes_by_authors.sum()
-
-table_data = {
-    "Rank": list(range(1, len(top_x_authors) + 1)),
-    "Author": top_x_authors.index.tolist(),
-    "Total Changes (insertions+deletions)":
-        [f"{value:,}".replace(",", " ") for value in (top_x_authors.values.tolist())],
-    "Share of Author in %": (top_x_authors.values/total_changes * 100).round(0).astype(int).tolist()
-}
-
-fig7 = ff.create_table([list(table_data.keys())] + list(zip(*table_data.values())))
-
-fig7.write_image("result/fig7.png", width=1424, height=450, scale=2)
-fig7_json = fig7.to_json()
-
-# Calculate "Others" category for remaining authors
 others = total_changes_by_authors.sum() - top_x_authors.sum()
 if others > 0:
     top_x_authors['Others'] = others
@@ -445,28 +457,6 @@ fig7b = px.pie(
 
 fig7b.write_image("result/fig7b.png", scale=2)
 fig7b_json = fig7b.to_json()
-
-# Building graph table with top authors by sum of changes for the last year
-
-# Grouped by year and author and sum of changes
-sum_changes = last_year_df.groupby(['month_year', settings.author]).sum('num_changes')
-total_changes_by_authors = sum_changes.groupby(settings.author)['num_changes'].sum()
-top_x_authors = total_changes_by_authors.sort_values(ascending=False).head(settings.num_top)
-
-total_changes = total_changes_by_authors.sum()
-
-table_data = {
-    "Rank": list(range(1, len(top_x_authors) + 1)),
-    "Author": top_x_authors.index.tolist(),
-    "Total Changes (insertions+deletions)":
-        [f"{value:,}".replace(",", " ") for value in (top_x_authors.values.tolist())],
-    "Share of Author in %": (top_x_authors.values/total_changes * 100).round(0).astype(int).tolist()
-}
-
-fig8 = ff.create_table([list(table_data.keys())] + list(zip(*table_data.values())))
-
-fig8.write_image("result/fig8.png", width=1424, height=450, scale=2)
-fig8_json = fig8.to_json()
 
 # Calculate "Others" category for remaining authors
 others = total_changes_by_authors.sum() - top_x_authors.sum()
