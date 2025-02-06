@@ -121,11 +121,6 @@ df = df[(df['date'].dt.year >= settings.start_year) & (df['date'].dt.year <= set
 last_year = pd.Timestamp.today().year - 1
 last_year_df = df[df['month_year'].dt.year == last_year]
 
-monthly_counts = last_year_df.groupby(['month_year'])['commit'].count().reset_index()
-commit_counts = df.groupby(['year', settings.author]).size().reset_index(name='commit_count')
-total_commits_by_email = commit_counts.groupby(settings.author)['commit_count'].sum()
-top_x_emails = total_commits_by_email.sort_values(ascending=False).head(settings.num_top)
-
 # Section of graphs building
 
 # Building line chart with total commits by year.
@@ -138,7 +133,6 @@ fig1_json = graph.graph_line(
 )
 
 # Building line chart with total commits in last year.
-
 fig4_json = graph.graph_line(
     last_year_df,
     "result/fig4.png",
@@ -148,7 +142,6 @@ fig4_json = graph.graph_line(
 )
 
 # Building graph table with top authors by count the commits for all years
-
 fig2_json = graph.graph_table(
     df,
     "result/fig2.png",
@@ -160,7 +153,6 @@ fig2_json = graph.graph_table(
 )
 
 # Building graph table with top authors by count the commits in last year
-
 fig5_json = graph.graph_table(
     last_year_df,
     "result/fig5.png",
@@ -172,7 +164,6 @@ fig5_json = graph.graph_table(
 )
 
 # Building graph table with top authors by sum of changes for all years
-
 fig7_json = graph.graph_table(
     df,
     "result/fig7.png",
@@ -183,9 +174,7 @@ fig7_json = graph.graph_table(
     "Total Changes (insertions+deletions)"
 )
 
-
 # Building graph table with top authors by sum of changes for last year
-
 fig8_json = graph.graph_table(
     last_year_df,
     "result/fig8.png",
@@ -195,8 +184,8 @@ fig8_json = graph.graph_table(
     'num_changes',
     "Total Changes (insertions+deletions)"
 )
-# Building bar&line chart by number of authors and commits by year
 
+# Building bar&line chart by number of authors and commits by year
 fig13_json = graph.graph_bar_line(
     df,
     "result/fig13.png",
@@ -206,7 +195,6 @@ fig13_json = graph.graph_bar_line(
 )
 
 # Building bar&line chart by number of authors and commits in last year
-
 fig14_json = graph.graph_bar_line(
     last_year_df,
     "result/fig14.png",
@@ -215,6 +203,7 @@ fig14_json = graph.graph_bar_line(
     'M1'
 )
 
+# Building pie chart by commit share of top authors for all years
 fig2a_json = graph.graph_pie(
     df,
     "result/fig2a.png",
@@ -226,6 +215,7 @@ fig2a_json = graph.graph_pie(
     "for All Years"
 )
 
+# Building pie chart by changes share of top authors for all years
 fig7b_json = graph.graph_pie(
     df,
     "result/fig7b.png",
@@ -237,6 +227,7 @@ fig7b_json = graph.graph_pie(
     "for All Years"
 )
 
+# Building pie chart by commit share of top authors in last year
 fig5a_json = graph.graph_pie(
     last_year_df,
     "result/fig5a.png",
@@ -248,6 +239,7 @@ fig5a_json = graph.graph_pie(
     "in Last Year"
 )
 
+# Building pie chart by changes share of top authors in last year
 fig8b_json = graph.graph_pie(
     last_year_df,
     "result/fig8b.png",
@@ -259,40 +251,27 @@ fig8b_json = graph.graph_pie(
     "in Last Year"
 )
 
-# Building line chart  by top authors
-
-# Find the top X emails based on commit count
-top_emails = total_commits_by_email.nlargest(settings.num_top).index
-top_commit_counts = commit_counts[commit_counts[settings.author].isin(top_emails).sort_values(ascending=False)]
-
-yearly_counts = df.groupby('year')['commit'].count().reset_index()
-fig3 = px.line(
-    top_commit_counts,
-    x="year",
-    y="commit_count",
-    color=settings.author,
-    title="Count of commits by top authors by years",
-    markers=True)
-
-fig3.update_layout(
-    legend=dict(
-        orientation="h",
-        yanchor="bottom",
-        y=1.02,
-        xanchor="right",
-        x=1
-    ),
-    title_x=0.5,
-    showlegend=True,
-    xaxis=dict(
-        tickmode='linear',
-        tick0=yearly_counts['year'].min(),
-        dtick=1
-    )
+# Building line chart  by top authors by year
+fig3_json = graph.graph_line_author(
+    df,
+    "result/fig3.png",
+    'year',
+    settings.author,
+    settings.num_top,
+    "by Year",
+    '1'
 )
 
-fig3.write_image("result/fig3.png", width=1409, height=450, scale=2)
-fig3_json = fig3.to_json()
+# Building line chart  by top authors in last year
+fig6_json = graph.graph_line_author(
+    last_year_df,
+    "result/fig6.png",
+    'month_year',
+    settings.author,
+    settings.num_top,
+    "in Last Year",
+    'M1'
+)
 
 # Building heatmap graph with distribution commits by hours by top authors for all years
 
@@ -333,42 +312,6 @@ fig12.update_layout(
 
 fig12.write_image("result/fig12.png", width=1409, height=450, scale=2)
 fig12_json = fig12.to_json()
-
-
-# Building line chart  by top authors for last year
-
-# Find the top X emails based on commit count
-commit_counts = last_year_df.groupby(['month_year', settings.author]).size().reset_index(name='commit_count')
-top_emails = total_commits_by_email.nlargest(settings.num_top).index
-top_commit_counts = commit_counts[commit_counts[settings.author].isin(top_emails).sort_values(ascending=False)]
-
-fig6 = px.line(
-    top_commit_counts,
-    x="month_year",
-    y="commit_count",
-    color=settings.author,
-    title="Count of commits by top authors by last year",
-    markers=True)
-
-fig6.update_layout(
-    legend=dict(
-        orientation="h",
-        yanchor="bottom",
-        y=1.02,
-        xanchor="right",
-        x=1
-    ),
-    title_x=0.5,
-    xaxis_tickformat='%Y-%B',
-    xaxis=dict(
-        tickmode='linear',
-        tick0=monthly_counts['month_year'].min(),
-        dtick='M1'
-    )
-)
-
-fig6.write_image("result/fig6.png", width=1409, height=450, scale=2)
-fig6_json = fig6.to_json()
 
 # Building heatmap graph with distribution commits by hours by top authors by last year
 

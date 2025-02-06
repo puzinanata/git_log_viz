@@ -143,3 +143,47 @@ def graph_pie(
 
     fig.write_image(fig_file_name, scale=2)
     return fig.to_json()
+
+
+def graph_line_author(
+        df,
+        fig_file_name: str,
+        column_name_date: str,
+        author: str,
+        num_top: str,
+        title: str,
+        dtick: str):
+
+    commit_count = df.groupby([column_name_date, author]).size().reset_index(name='commit_count')
+    total_commits_by_author = commit_count.groupby(author)['commit_count'].sum()
+    top_authors = total_commits_by_author.nlargest(num_top).index
+    top_commit_count = commit_count[commit_count[author].isin(top_authors).sort_values(ascending=False)]
+    counter = df.groupby(column_name_date)['commit'].count().reset_index()
+
+    fig = px.line(
+        top_commit_count,
+        x=column_name_date,
+        y="commit_count",
+        color=author,
+        title=f"Count of commits by top authors {title}",
+        markers=True)
+
+    fig.update_layout(
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        ),
+        title_x=0.5,
+        showlegend=True,
+        xaxis=dict(
+            tickmode='linear',
+            tick0=counter[column_name_date].min(),
+            dtick=dtick
+        )
+    )
+
+    fig.write_image(fig_file_name, width=1409, height=450, scale=2)
+    return fig.to_json()
