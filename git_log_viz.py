@@ -2,7 +2,6 @@ import subprocess
 import re
 import os
 import plotly.express as px
-import plotly.figure_factory as ff
 import pandas as pd
 from src import settings
 from src import templates
@@ -138,13 +137,13 @@ fig1_json = graph.graph_line(
     '1'
 )
 
-# Building line chart with total commits by last year.
+# Building line chart with total commits in last year.
 
 fig4_json = graph.graph_line(
     last_year_df,
     "result/fig4.png",
     "month_year",
-    "Count of commits by last year",
+    "Count of commits in last year",
     'M1'
 )
 
@@ -160,7 +159,7 @@ fig2_json = graph.graph_table(
     "Total Commits"
 )
 
-# Building graph table with top authors by count the commits by last year
+# Building graph table with top authors by count the commits in last year
 
 fig5_json = graph.graph_table(
     last_year_df,
@@ -185,7 +184,7 @@ fig7_json = graph.graph_table(
 )
 
 
-# Building graph table with top authors by sum of changes for last years
+# Building graph table with top authors by sum of changes for last year
 
 fig8_json = graph.graph_table(
     last_year_df,
@@ -196,26 +195,69 @@ fig8_json = graph.graph_table(
     'num_changes',
     "Total Changes (insertions+deletions)"
 )
+# Building bar&line chart by number of authors and commits by year
 
-
-# Calculate "Others" category for remaining authors
-others = total_commits_by_email.sum() - top_x_emails.sum()
-if others > 0:
-    top_x_emails['Others'] = others
-
-# Prepare the data for Plotly
-data = top_x_emails.reset_index()
-data.columns = ['Author', 'Commits']
-
-fig2a = px.pie(
-    data,
-    values='Commits',
-    names='Author',
-    title=f"Top {settings.num_top} Authors by Commit Count by Years"
+fig13_json = graph.graph_bar_line(
+    df,
+    "result/fig13.png",
+    'year',
+    "Number of Authors and Total Commits by Year",
+    '1'
 )
 
-fig2a.write_image("result/fig2a.png", scale=2)
-fig2a_json = fig2a.to_json()
+# Building bar&line chart by number of authors and commits in last year
+
+fig14_json = graph.graph_bar_line(
+    last_year_df,
+    "result/fig14.png",
+    'month_year',
+    "Number of Authors and Total Commits in Last Year",
+    'M1'
+)
+
+fig2a_json = graph.graph_pie(
+    df,
+    "result/fig2a.png",
+    'year',
+    "Commit Count",
+    settings.author,
+    settings.num_top,
+    'commit_count',
+    "for All Years"
+)
+
+fig7b_json = graph.graph_pie(
+    df,
+    "result/fig7b.png",
+    'year',
+    "Share of Changes",
+    settings.author,
+    settings.num_top,
+    'num_changes',
+    "for All Years"
+)
+
+fig5a_json = graph.graph_pie(
+    last_year_df,
+    "result/fig5a.png",
+    'month_year',
+    "Commit Count",
+    settings.author,
+    settings.num_top,
+    'commit_count',
+    "in Last Year"
+)
+
+fig8b_json = graph.graph_pie(
+    last_year_df,
+    "result/fig8b.png",
+    'month_year',
+    "Share of Changes",
+    settings.author,
+    settings.num_top,
+    'num_changes',
+    "in Last Year"
+)
 
 # Building line chart  by top authors
 
@@ -291,26 +333,6 @@ fig12.update_layout(
 
 fig12.write_image("result/fig12.png", width=1409, height=450, scale=2)
 fig12_json = fig12.to_json()
-
-
-# Calculate "Others" category for remaining authors
-others = total_commits_by_email.sum() - top_x_emails.sum()
-if others > 0:
-    top_x_emails['Others'] = others
-
-# Prepare the data for Plotly
-data = top_x_emails.reset_index()
-data.columns = ['Author', 'Commits']
-
-fig5a = px.pie(
-    data,
-    values='Commits',
-    names='Author',
-    title=f"Top {settings.num_top} Authors by Commit Count in last year"
-)
-
-fig5a.write_image("result/fig5a.png", scale=2)
-fig5a_json = fig5a.to_json()
 
 
 # Building line chart  by top authors for last year
@@ -436,47 +458,6 @@ fig11.update_layout(
 fig11.write_image("result/fig11.png", width=1409, height=450, scale=2)
 fig11_json = fig11.to_json()
 
-# Calculate "Others" category for remaining authors
-sum_changes = df.groupby(['year', settings.author]).sum('num_changes')
-total_changes_by_authors = sum_changes.groupby(settings.author)['num_changes'].sum()
-top_x_authors = total_changes_by_authors.sort_values(ascending=False).head(settings.num_top)
-others = total_changes_by_authors.sum() - top_x_authors.sum()
-if others > 0:
-    top_x_authors['Others'] = others
-
-# Prepare the data for Plotly
-data = top_x_authors.reset_index()
-data.columns = ['Author', 'Num_Changes']
-
-fig7b = px.pie(
-    data,
-    values='Num_Changes',
-    names='Author',
-    title=f"Top {settings.num_top} Authors by Share of Changes by Years"
-)
-
-fig7b.write_image("result/fig7b.png", scale=2)
-fig7b_json = fig7b.to_json()
-
-# Calculate "Others" category for remaining authors
-others = total_changes_by_authors.sum() - top_x_authors.sum()
-if others > 0:
-    top_x_authors['Others'] = others
-
-# Prepare the data for Plotly
-data = top_x_authors.reset_index()
-data.columns = ['Author', 'Num_Changes']
-
-fig8b = px.pie(
-    data,
-    values='Num_Changes',
-    names='Author',
-    title=f"Top {settings.num_top} Authors by Share of Changes in last year"
-)
-
-fig8b.write_image("result/fig8b.png", scale=2)
-fig8b_json = fig8b.to_json()
-
 # Building heatmap graph with distribution commits by hours by top authors by all years
 
 # Aggregate commits by hour and author
@@ -524,96 +505,6 @@ fig9.update_layout(
 
 fig9.write_image("result/fig9.png", width=1409, height=450, scale=2)
 fig9_json = fig9.to_json()
-
-# Building bar&line chart by number of authors and commits by year
-
-# Aggregate data: Count unique usernames and total commits per year
-df_summary = df.groupby("year").agg(
-    unique_users=("username", "nunique"),
-    total_commits=("commit", "count")
-).reset_index()
-
-fig13 = px.bar(
-    df_summary,
-    x="year",
-    y="total_commits",
-    text_auto=True,
-    title="Number of Authors and Total Commits by Year",
-    labels={"total_commits": "Total Commits", "year": "Year"}
-)
-fig13.update_traces(textposition="outside")
-
-# Add line for unique usernames
-fig13.add_scatter(
-    x=df_summary["year"],
-    y=df_summary["unique_users"],
-    mode="lines+markers+text",
-    name="Total authors",
-    yaxis="y2",
-    text=df_summary["unique_users"],
-    textposition="top center",
-    textfont=dict(color="red"),
-)
-
-# Update layout for dual-axis
-fig13.update_layout(
-    yaxis=dict(title="Total Commits"),
-    yaxis2=dict(title="Authors", overlaying="y", side="right"),
-    title_x=0.5,
-    xaxis=dict(
-        tickmode='linear',
-        tick0=df_summary['year'].min(),
-        dtick=1
-    )
-)
-
-fig13.write_image("result/fig13.png", width=1424, height=450, scale=2)
-fig13_json = fig13.to_json()
-
-# Building bar&line chart by number of authors and commits by year
-
-# Aggregate data: Count unique usernames and total commits per year
-df_summary = last_year_df.groupby("month_year").agg(
-    unique_users=("username", "nunique"),
-    total_commits=("commit", "count")
-).reset_index()
-
-fig14 = px.bar(
-    df_summary,
-    x="month_year",
-    y="total_commits",
-    text_auto=True,
-    title="Number of Authors and Total Commits by Last Year",
-    labels={"total_commits": "Total Commits", "month_year": "Month"}
-)
-fig14.update_traces(textposition="outside")
-
-# Add line for unique usernames
-fig14.add_scatter(
-    x=df_summary["month_year"],
-    y=df_summary["unique_users"],
-    mode="lines+markers+text",
-    name="Total authors",
-    yaxis="y2",
-    text=df_summary["unique_users"],
-    textposition="top center",
-    textfont=dict(color="red"),
-)
-
-# Update layout for dual-axis
-fig14.update_layout(
-    yaxis=dict(title="Total Commits"),
-    yaxis2=dict(title="Authors", overlaying="y", side="right"),
-    title_x=0.5,
-    xaxis=dict(
-        tickmode='linear',
-        tick0=df_summary['month_year'].min(),
-        dtick='M1'
-    )
-)
-
-fig14.write_image("result/fig14.png", width=1424, height=450, scale=2)
-fig14_json = fig14.to_json()
 
 # #5. Final Section of generation html reports
 
