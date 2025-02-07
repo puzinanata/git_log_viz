@@ -1,125 +1,35 @@
-import subprocess
-import re
-import os
-import pandas as pd
 from src import settings
 from src import templates
 from src import graph
+from src import prep_data
+from src import collect
 
-# Command to extract data from git log
-command = "git log --pretty=format:'%H %ad %ae' --stat --no-merges"
+# 1. Data Collection
 
-# Dictionary to store the log data for each repository
-repo_logs = {}
+# Call function with extracted data in df
+collect.collect_data(
+    "result/all_repos_data.csv",
+    settings.repo_name,
+    settings.repo_log_csv
+)
 
-# Loop for iteration through repos
-for repo_path, repo_csv in zip(settings.repo_name, settings.repo_log_csv):
+# 2. Data Cleaning and Data Processing
 
-    if not os.path.exists(repo_csv):
-        print(f"DB csv file '{repo_csv}' doesn't exist.")
-        result = subprocess.run(
-            f"cd {repo_path}; {command}",
-            shell=True,
-            text=True,
-            capture_output=True
-        )
-        if result.returncode == 0:
-            repo_logs[repo_path] = result.stdout
-        else:
-            print(f"Error retrieving data from {repo_path}: {result.stderr}")
-    else:
-        print(f"DB csv file '{repo_csv}' exist so do it fast.")
+# Call function with cleaned and processed df
+df, last_year_df = prep_data.process_data(
+    "result/all_repos_data.csv",
+    settings.exclude_username,
+    settings.old_username,
+    settings.new_username,
+    settings.start_year,
+    settings.finish_year
+)
 
+# Call function with data exploration
+# prep_data.explore_data(df)
+# prep_data.explore_data(last_year_df)
 
-# Process the output
-
-# Regex to match commit details and the summary line
-
-# commit_pattern covers following cases:
-# 47b679341b5d2051cce591af65f51e22be051c28 Fri Dec 27 12:16:48 2024 +0300 user@example.com
-# 47b679341b5d2051cce591af65f51e22be051c28 Fri Dec 27 12:16:48 2024 -0300 user@example.com
-# 47b679341b5d2051cce591af65f51e22be051c28 Fri Dec 27 12:16:48 2024 0000 user@example.com
-# 00a9376311c94680e83bdd05f5e9d398869a2bd7 Wed Sep 7 22:38:54 2022 +0300 user@example.com
-commit_pattern = r"^([a-f0-9]{40})\s+(\S+ \S+ \d+ [0-9:]{8} [0-9]{4} .?[0-9\+\-]{4}) (.*)"
-
-#  summary_pattern covers following cases:
-#  2 files changed, 0 insertions(+), 0 deletions(-)
-#  2 files changed, 0 insertions(+)
-#  2 files changed, 0 deletions(-)
-#  2 file changed, 0 insertions(+), 0 deletions(-)
-#  2 file changed, 0 insertions(+)
-#  2 file changed, 0 deletions(-)
-summary_pattern = r"(\d+) files? \S+, (\d+) \S+?\([\+\-]\),? ?(\d+)?"
-hour_pattern = r"(\d{2}):\d{2}:\d{2}"
-
-commits = {}
-
-# Process logs for each repository
-for repo_log, log_csv in zip(repo_logs.items(), settings.repo_log_csv):
-    log_data = repo_log[1]
-    repo = repo_log[0]
-    lines = log_data.splitlines()
-    commits[log_csv] = []
-
-    for line in lines:
-        commit_match = re.match(commit_pattern, line)
-        summary_match = re.search(summary_pattern, line)
-
-        if commit_match:
-            timestamp = commit_match.group(2)
-            hour_match = re.search(hour_pattern, timestamp)
-
-            commits[log_csv].append({
-                "repo": repo,
-                "commit": commit_match.group(1),
-                "date": commit_match.group(2),
-                "hour": int(hour_match.group(1)) if hour_match else 0,
-                "email": commit_match.group(3),
-                "num_changes": 0,
-            })
-        elif summary_match and commits[log_csv]:
-            num_insertions = int(summary_match.group(2)) if summary_match.group(2) else 0
-            num_deletions = int(summary_match.group(3)) if summary_match.group(3) else 0
-            commits[log_csv][-1]["num_changes"] = num_insertions + num_deletions
-
-    # Save git log from repo to separate CSV file
-    pd.DataFrame(commits[log_csv]).to_csv(log_csv, index=False)
-
-# Read data from cvs
-df = pd.concat([pd.read_csv(file) for file in settings.repo_log_csv], ignore_index=True)
-
-
-# Section of Data preparation and creation new attributes in df
-df["date"] = pd.to_datetime(df["date"], utc=True)
-
-df["year"] = df["date"].dt.year
-df["year"] = df["year"].astype(int)
-
-df["utc_hour"] = df["date"].dt.hour
-
-df["month_year"] = df["date"].dt.strftime('%Y-%m')
-df['month_year'] = pd.to_datetime(df['month_year'], format='%Y-%m')
-
-# Extract the part before '@' to create new column 'Username'
-df['username'] = df['email'].str.split('@').str[0]
-
-# Exclude the username
-df = df[~df['username'].isin(settings.exclude_username)]
-
-# Replace all occurrences of old username with new username
-df['username'] = df['username'].replace(settings.old_username, settings.new_username)
-
-# Transfer username to lower case
-df['username'] = df['username'].str.lower()
-
-# Filter years
-df = df[(df['date'].dt.year >= settings.start_year) & (df['date'].dt.year <= settings.finish_year)]
-
-# Filter last year and creation filtered df with data fot the last year
-last_year = pd.Timestamp.today().year - 1
-last_year_df = df[df['month_year'].dt.year == last_year]
-
-# Section of graphs building
+# 3.Data Analysis and Data Visualisation
 
 # Building line chart with total commits by year.
 fig1_json = graph.graph_line(
