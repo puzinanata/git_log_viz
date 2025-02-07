@@ -1,12 +1,10 @@
 import subprocess
 import re
 import os
-import plotly.express as px
 import pandas as pd
 from src import settings
 from src import templates
 from src import graph
-import plotly.graph_objects as go
 
 # Command to extract data from git log
 command = "git log --pretty=format:'%H %ad %ae' --stat --no-merges"
@@ -274,182 +272,55 @@ fig6_json = graph.graph_line_author(
 )
 
 # Building heatmap graph with distribution commits by hours by top authors for all years
-
-# Aggregate commits by hour
-commit_counts = df.groupby(settings.hour).size()
-commit_counts_all_percent = (commit_counts / commit_counts.sum()) * 100
-
-df_all = commit_counts_all_percent.reset_index()
-df_all.columns = [settings.hour, 'percentage']
-df_all['author'] = 'All Users'
-
-# Create heatmap using Plotly
-fig12 = px.density_heatmap(
-    df_all,
-    x=settings.hour,
-    y='author',
-    z="percentage",
-    color_continuous_scale="YlGnBu",
-    title="Distribution of Commits by Hour for All Authors (as Percentage) for All Years",
+fig9_json = graph.graph_heatmap(
+    df,
+    "result/fig9.png",
+    settings.hour,
+    settings.author,
+    settings.num_top,
+    "Top Authors",
+    "All Years",
+    "top_authors"
 )
 
-# Add text annotations using a scatter plot
-fig12.add_trace(go.Scatter(
-    x=df_all[settings.hour],
-    y=df_all['author'],
-    text=df_all["percentage"].round(0).astype(int),
-    mode="text",
-    textposition="middle center",
-    textfont=dict(size=12, color="black"),
-    )
+# Building heatmap graph with distribution commits by hours by top authors for last year
+fig10_json = graph.graph_heatmap(
+    last_year_df,
+    "result/fig10.png",
+    settings.hour,
+    settings.author,
+    settings.num_top,
+    "Top Authors",
+    "Last Year",
+    "top_authors"
 )
 
-fig12.update_xaxes(type='category', title="Hour of the Day", tickmode="linear", dtick=1)
-
-fig12.update_layout(
-    title_x=0.5,
+# Building heatmap graph with distribution commits by hours for all users for all years
+fig12_json = graph.graph_heatmap(
+    df,
+    "result/fig12.png",
+    settings.hour,
+    settings.author,
+    settings.num_top,
+    "All Users",
+    "All Years",
+    "all_users"
 )
 
-fig12.write_image("result/fig12.png", width=1409, height=450, scale=2)
-fig12_json = fig12.to_json()
-
-# Building heatmap graph with distribution commits by hours by top authors by last year
-
-# Aggregate commits by hour and author
-commit_counts = last_year_df.groupby([settings.hour, settings.author]).size().unstack(fill_value=0)
-top_x_authors = commit_counts.sum(axis=0).nlargest(settings.num_top).index
-commit_counts_top10 = commit_counts[top_x_authors]
-commit_counts_top10_percent = commit_counts_top10.div(commit_counts_top10.sum(axis=0), axis=1) * 100
-
-df_long = commit_counts_top10_percent.reset_index().melt(
-    id_vars=settings.hour,
-    var_name=settings.author,
-    value_name='percentage'
+# Building heatmap graph with distribution commits by hours for all users for last year
+fig11_json = graph.graph_heatmap(
+    last_year_df,
+    "result/fig11.png",
+    settings.hour,
+    settings.author,
+    settings.num_top,
+    "All Users",
+    "Last Year",
+    "all_users"
 )
 
-# Create heatmap using Plotly
-fig10 = px.density_heatmap(
-    df_long,
-    x=settings.hour,
-    y=settings.author,
-    z="percentage",
-    histfunc="sum",
-    color_continuous_scale="YlGnBu",
-    title="Distribution of Commits by Hour for Top Authors (as Percentage) for the last year",
-)
 
-# Add text annotations using a scatter plot
-fig10.add_trace(
-    go.Scatter(
-        x=df_long[settings.hour],
-        y=df_long[settings.author],
-        text=df_long["percentage"].round(0).astype(int),
-        mode="text",
-        textposition="middle center",
-        textfont=dict(size=12, color="black"),
-    )
-)
-
-fig10.update_xaxes(type='category', title="Hour of the Day", tickmode="linear", dtick=1)
-fig10.update_layout(
-    yaxis=dict(categoryorder="array", categoryarray=top_x_authors[::-1]),
-    title_x=0.5,
-    yaxis_title="Author",
-    coloraxis_colorbar_title="Percentage"
-)
-
-fig10.write_image("result/fig10.png", width=1409, height=450, scale=2)
-fig10_json = fig10.to_json()
-
-# Building heatmap graph with distribution commits by hours by top authors by last year
-
-# Aggregate commits by hour
-commit_counts_12m = last_year_df.groupby(settings.hour).size()
-commit_counts_all_percent = (commit_counts_12m / commit_counts_12m.sum()) * 100
-
-df_all = commit_counts_all_percent.reset_index()
-df_all.columns = [settings.hour, 'percentage']
-df_all['author'] = 'All Users'
-
-# Create heatmap using Plotly
-fig11 = px.density_heatmap(
-    df_all,
-    x=settings.hour,
-    y='author',
-    z="percentage",
-    color_continuous_scale="YlGnBu",
-    title="Distribution of Commits by Hour for All Authors (as Percentage) for the last year",
-)
-
-# Add text annotations using a scatter plot
-fig11.add_trace(go.Scatter(
-    x=df_all[settings.hour],
-    y=df_all['author'],
-    text=df_all["percentage"].round(0).astype(int),
-    mode="text",
-    textposition="middle center",
-    textfont=dict(size=12, color="black"),
-    )
-)
-
-fig11.update_xaxes(type='category', title="Hour of the Day", tickmode="linear", dtick=1)
-
-fig11.update_layout(
-    title_x=0.5,
-)
-
-fig11.write_image("result/fig11.png", width=1409, height=450, scale=2)
-fig11_json = fig11.to_json()
-
-# Building heatmap graph with distribution commits by hours by top authors by all years
-
-# Aggregate commits by hour and author
-commit_counts = df.groupby([settings.hour, settings.author]).size().unstack(fill_value=0)
-top_x_authors = commit_counts.sum(axis=0).nlargest(settings.num_top).index
-commit_counts_top10 = commit_counts[top_x_authors]
-commit_counts_top10_percent = commit_counts_top10.div(commit_counts_top10.sum(axis=0), axis=1) * 100
-
-df_long = commit_counts_top10_percent.reset_index().melt(
-    id_vars=settings.hour,
-    var_name=settings.author,
-    value_name='percentage'
-)
-
-# Create heatmap using Plotly
-fig9 = px.density_heatmap(
-    df_long,
-    x=settings.hour,
-    y=settings.author,
-    z="percentage",
-    histfunc="sum",
-    color_continuous_scale="YlGnBu",
-    title="Distribution of Commits by Hour for Top Authors (as Percentage) for all years",
-)
-
-# Add text annotations using a scatter plot
-fig9.add_trace(
-    go.Scatter(
-        x=df_long[settings.hour],
-        y=df_long[settings.author],
-        text=df_long["percentage"].round(0).astype(int),
-        mode="text",
-        textposition="middle center",
-        textfont=dict(size=12, color="black"),
-    )
-)
-
-fig9.update_xaxes(type='category', title="Hour of the Day", tickmode="linear", dtick=1)
-fig9.update_layout(
-    yaxis=dict(categoryorder="array", categoryarray=top_x_authors[::-1]),
-    title_x=0.5,
-    yaxis_title="Author",
-    coloraxis_colorbar_title="Percentage"
-)
-
-fig9.write_image("result/fig9.png", width=1409, height=450, scale=2)
-fig9_json = fig9.to_json()
-
-# #5. Final Section of generation html reports
+# Final Section of generation html reports
 
 # Building of  HTML report with js
 html_js_report = (

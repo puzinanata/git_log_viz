@@ -1,7 +1,7 @@
 import pandas as pd
 import plotly.express as px
 import plotly.figure_factory as ff
-
+import plotly.graph_objects as go
 
 def graph_line(
         df: pd,
@@ -183,6 +183,76 @@ def graph_line_author(
             tick0=counter[column_name_date].min(),
             dtick=dtick
         )
+    )
+
+    fig.write_image(fig_file_name, width=1409, height=450, scale=2)
+    return fig.to_json()
+
+
+def graph_heatmap(
+        df,
+        fig_file_name: str,
+        hour: str,
+        author: str,
+        num_top: int,
+        title_user: str,
+        title_period,
+        mode: str):
+
+    if mode == "top_authors":
+        commit_count = df.groupby([hour, author]).size().unstack(fill_value=0)
+        top_x_authors = commit_count.sum(axis=0).nlargest(num_top).index
+        commit_count_top = commit_count[top_x_authors]
+        commit_count_top_percent = commit_count_top.div(commit_count_top.sum(axis=0), axis=1) * 100
+
+        df_long = commit_count_top_percent.reset_index().melt(
+            id_vars=hour,
+            var_name=author,
+            value_name='percentage'
+        )
+
+        y_axis_title = title_user
+        category_order = top_x_authors[::-1]
+
+    else:
+        commit_count_all = df.groupby(hour).size()
+        commit_count_all_percent = (commit_count_all / commit_count_all.sum()) * 100
+
+        df_long = commit_count_all_percent.reset_index()
+        df_long.columns = [hour, 'percentage']
+        df_long[author] = title_user
+
+        y_axis_title = ""
+        category_order = [title_user]
+
+    fig = px.density_heatmap(
+        df_long,
+        x=hour,
+        y=author,
+        z="percentage",
+        histfunc="sum",
+        color_continuous_scale="YlGnBu",
+        title=f"Distribution of Commits by Hour for {title_user} (as Percentage) for {title_period}",
+    )
+
+    # Add text annotations using a scatter plot
+    fig.add_trace(
+        go.Scatter(
+            x=df_long[hour],
+            y=df_long[author],
+            text=df_long["percentage"].round(0).astype(int),
+            mode="text",
+            textposition="middle center",
+            textfont=dict(size=12, color="black"),
+        )
+    )
+
+    fig.update_xaxes(type='category', title="Hour of the Day", tickmode="linear", dtick=1)
+    fig.update_layout(
+        yaxis=dict(categoryorder="array", categoryarray=category_order),
+        title_x=0.5,
+        yaxis_title=y_axis_title,
+        coloraxis_colorbar_title="Percentage"
     )
 
     fig.write_image(fig_file_name, width=1409, height=450, scale=2)
