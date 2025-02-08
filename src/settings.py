@@ -2,7 +2,6 @@
 
 # Choose repository: put name of repo
 repo_name = (
-    './git_repos/neo',
     './git_repos/neo-go',
     './git_repos/neofs-node',
     './git_repos/neofs-sdk-go',
@@ -33,4 +32,4 @@ hour = 'utc_hour'
 
 # Choose years for report
 start_year = 1900
-finish_year = 2024
+finish_year = 2025

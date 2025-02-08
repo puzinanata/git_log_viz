@@ -10,16 +10,24 @@ def collect_data(
         csv_path: str,
         repo_name: str,
         repo_log_csv: str,):
-    # 1.1.Section of extracting data
 
     # Command to extract data from git log
     command = "git log --pretty=format:'%H %ad %ae' --stat --no-merges"
+    command_last_commit = "git log -1 --pretty=format:'%H' --no-merges"
+    command_pull = "git pull &> /dev/null"
 
     # Dictionary to store the log data for each repository
     repo_logs = {}
 
     # Loop for iteration through repos
     for repo_path, repo_csv in zip(repo_name, repo_log_csv):
+        last_commit_id = subprocess.run(
+            f"cd {repo_path}; {command_pull}; {command_last_commit}",
+            shell=True,
+            text=True,
+            capture_output=True
+        )
+        print(f"Last commit in {repo_path} after update:", last_commit_id.stdout)
 
         if not os.path.exists(repo_csv):
             print(f"DB csv file '{repo_csv}' doesn't exist.")
@@ -35,6 +43,16 @@ def collect_data(
                 print(f"Error retrieving data from {repo_path}: {result.stderr}")
         else:
             print(f"DB csv file '{repo_csv}' exist so do it fast.")
+            last_commit_from_csv = ""
+            with open(repo_csv, "r") as file:
+                lines = file.readlines()
+                if len(lines) > 1:
+                    last_commit_from_csv = lines[1].strip().split(",")[1]
+                    print("Last commit in csv_file before update: ", last_commit_from_csv)
+            if last_commit_id.stdout == last_commit_from_csv:
+                print(f"No updates in {repo_path}")
+            else:
+                print("to do algorithm for append new commits to csv")
 
     # 1.2. Process the output
 
