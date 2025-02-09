@@ -9,7 +9,7 @@ import pandas as pd
 def collect_data(
         csv_path: str,
         repo_name: str,
-        repo_log_csv: str,):
+        repo_log_csv: list,):
 
     # Command to extract data from git log
     command = "git log --pretty=format:'%H %ad %ae' --stat --no-merges"
@@ -52,7 +52,17 @@ def collect_data(
             if last_commit_id.stdout == last_commit_from_csv:
                 print(f"No updates in {repo_path}")
             else:
-                print("to do algorithm for append new commits to csv")
+                print("to do")
+                result = subprocess.run(
+                    f"cd {repo_path}; {command}",
+                    shell=True,
+                    text=True,
+                    capture_output=True
+                )
+                if result.returncode == 0:
+                    repo_logs[repo_path] = result.stdout
+                else:
+                    print(f"Error retrieving data from {repo_path}: {result.stderr}")
 
     # 1.2. Process the output
 
@@ -78,10 +88,11 @@ def collect_data(
     commits = {}
 
     # 1.3.Process logs for each repository
-    for repo_log, log_csv in zip(repo_logs.items(), repo_log_csv):
+    for repo_log in repo_logs.items():
         log_data = repo_log[1]
         repo = repo_log[0]
         lines = log_data.splitlines()
+        log_csv = "result/git_log_{}.csv".format(repo.split('/')[-1])
         commits[log_csv] = []
 
         for line in lines:
