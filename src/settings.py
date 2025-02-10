@@ -5,7 +5,7 @@ repo_name = (
     './git_repos/neo-go',
     './git_repos/neofs-node',
     './git_repos/neofs-sdk-go',
-    )
+)
 
 # Definition of name csv file(-s)
 repo_log_csv = []

@@ -15,19 +15,32 @@ def collect_data(
     command = "git log --pretty=format:'%H %ad %ae' --stat --no-merges"
     command_last_commit = "git log -1 --pretty=format:'%H' --no-merges"
     command_pull = "git pull &> /dev/null"
+    # command_pull = "true"
+
 
     # Dictionary to store the log data for each repository
     repo_logs = {}
+    repo_logs_upd = {}
 
     # Loop for iteration through repos
     for repo_path, repo_csv in zip(repo_name, repo_log_csv):
-        last_commit_id = subprocess.run(
+        last_commit_before_pull = subprocess.run(
+            f"cd {repo_path}; {command_last_commit}",
+            shell=True,
+            text=True,
+            capture_output=True
+        ).stdout.strip()
+
+        print(f"Last commit in {repo_path} before update:", last_commit_before_pull)
+
+        last_commit_after_pull = subprocess.run(
             f"cd {repo_path}; {command_pull}; {command_last_commit}",
             shell=True,
             text=True,
             capture_output=True
-        )
-        print(f"Last commit in {repo_path} after update:", last_commit_id.stdout)
+        ).stdout.strip()
+
+        print(f"Last commit in {repo_path} after update:", last_commit_after_pull)
 
         if not os.path.exists(repo_csv):
             print(f"DB csv file '{repo_csv}' doesn't exist.")
@@ -36,11 +49,9 @@ def collect_data(
                 shell=True,
                 text=True,
                 capture_output=True
-            )
-            if result.returncode == 0:
-                repo_logs[repo_path] = result.stdout
-            else:
-                print(f"Error retrieving data from {repo_path}: {result.stderr}")
+            ).stdout
+            repo_logs[repo_path] = result
+
         else:
             print(f"DB csv file '{repo_csv}' exist so do it fast.")
             last_commit_from_csv = ""
@@ -49,20 +60,33 @@ def collect_data(
                 if len(lines) > 1:
                     last_commit_from_csv = lines[1].strip().split(",")[1]
                     print("Last commit in csv_file before update: ", last_commit_from_csv)
-            if last_commit_id.stdout == last_commit_from_csv:
+            if last_commit_after_pull == last_commit_from_csv:
                 print(f"No updates in {repo_path}")
             else:
-                print("to do")
-                result = subprocess.run(
-                    f"cd {repo_path}; {command}",
+                print("to add new commits after git pull")
+
+                command_new_commits = f"git log {last_commit_before_pull}..HEAD --pretty=format:'%H %ad %ae' --stat --no-merges"
+                count_new_commits = f"git log {last_commit_before_pull}..HEAD --pretty=format:'%H' --no-merges | wc -l"
+
+                new_commits = subprocess.run(
+                    f"cd {repo_path}; {command_new_commits}",
                     shell=True,
                     text=True,
                     capture_output=True
-                )
-                if result.returncode == 0:
-                    repo_logs[repo_path] = result.stdout
+                ).stdout.strip()
+
+                count_commit = subprocess.run(
+                    f"cd {repo_path}; {count_new_commits}",
+                    shell=True,
+                    text=True,
+                    capture_output=True
+                ).stdout.strip()
+                if int(count_commit) == 0:
+                    print(f"No updates in {repo_path}")
                 else:
-                    print(f"Error retrieving data from {repo_path}: {result.stderr}")
+                    final_commit_count = int(count_commit)+1
+                    print(f"Following {final_commit_count} new commits in {repo_path} should be added after update : {new_commits}")
+                    repo_logs_upd[repo_path] = new_commits
 
     # 1.2. Process the output
 
