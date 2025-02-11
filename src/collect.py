@@ -141,16 +141,23 @@ def collect_data(
                     num_insertions = int(summary_match.group(2)) if summary_match.group(2) else 0
                     num_deletions = int(summary_match.group(3)) if summary_match.group(3) else 0
                     commits[repo][-1]["num_changes"] = num_insertions + num_deletions
-                if create_db:
-                    pd.DataFrame(commits[repo]).to_csv(log_csv, index=False)
-        return commits
+            if create_db:
+                pd.DataFrame(commits[repo]).to_csv(log_csv, index=False)
+            else:
+                print("Need to add data", log_csv)
+                #pd.DataFrame(commits[repo]).to_csv(
+                #    log_csv,
+                #    mode='a',
+                #    header=not pd.io.common.file_exists(log_csv),
+                #    index=False)
 
-    repo_logs_full = process_log(repo_logs, True)
-    repo_logs_new = process_log(repo_logs_upd, False)
-
+    # create new DB
+    process_log(repo_logs, True)
+    # update exist
+    process_log(repo_logs_upd, False)
 
     # 1.4 Read data from cvs & save df to csv with all repos data
-    df = pd.concat([pd.read_csv(file) for file in repo_log_csv if os.path.exists(file)], ignore_index=True)
+    df = pd.concat([pd.read_csv(file) for file in repo_log_csv], ignore_index=True)
     df.to_csv(csv_path, index=False)
     return df
 
