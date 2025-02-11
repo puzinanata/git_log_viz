@@ -8,15 +8,14 @@ import pandas as pd
 
 def collect_data(
         csv_path: str,
-        repo_name: str,
-        repo_log_csv: list,):
+        repo_name: list,
+        repo_log_csv: list):
 
     # Command to extract data from git log
     command = "git log --pretty=format:'%H %ad %ae' --stat --no-merges"
     command_last_commit = "git log -1 --pretty=format:'%H' --no-merges"
     command_pull = "git pull &> /dev/null"
     # command_pull = "true"
-
 
     # Dictionary to store the log data for each repository
     repo_logs = {}
@@ -53,20 +52,20 @@ def collect_data(
             repo_logs[repo_path] = result
 
         else:
-            print(f"DB csv file '{repo_csv}' exist so do it fast.")
+            print(f"DB csv file '{repo_csv}' exist so checking new commits...")
+
             last_commit_from_csv = ""
-            with open(repo_csv, "r") as file:
-                lines = file.readlines()
-                if len(lines) > 1:
-                    last_commit_from_csv = lines[1].strip().split(",")[1]
-                    print("Last commit in csv_file before update: ", last_commit_from_csv)
+            df_existing = pd.read_csv(repo_csv) if os.path.exists(repo_csv) else pd.DataFrame()
+
+            if not df_existing.empty:
+                last_commit_from_csv = df_existing.iloc[0]['commit']
+                print(f"Last commit in CSV before update: {last_commit_from_csv}")
+
             if last_commit_after_pull == last_commit_from_csv:
                 print(f"No updates in {repo_path}")
             else:
-                print("to add new commits after git pull")
-
-                command_new_commits = f"git log {last_commit_before_pull}..HEAD --pretty=format:'%H %ad %ae' --stat --no-merges"
-                count_new_commits = f"git log {last_commit_before_pull}..HEAD --pretty=format:'%H' --no-merges | wc -l"
+                command_new_commits = f"git log {last_commit_from_csv}..HEAD --pretty=format:'%H %ad %ae' --stat --no-merges"
+                count_new_commits = f"git log {last_commit_from_csv}..HEAD --pretty=format:'%H' --no-merges | wc -l"
 
                 new_commits = subprocess.run(
                     f"cd {repo_path}; {command_new_commits}",
@@ -81,11 +80,11 @@ def collect_data(
                     text=True,
                     capture_output=True
                 ).stdout.strip()
+
                 if int(count_commit) == 0:
-                    print(f"No updates in {repo_path}")
+                    print(f"No commits will be added in {repo_path}")
                 else:
-                    final_commit_count = int(count_commit)+1
-                    print(f"Following {final_commit_count} new commits in {repo_path} should be added after update : {new_commits}")
+                    print(f"{count_commit} new commits in {repo_path} should be added after update to csv")
                     repo_logs_upd[repo_path] = new_commits
 
     # 1.2. Process the output
@@ -109,42 +108,50 @@ def collect_data(
     summary_pattern = r"(\d+) files? \S+, (\d+) \S+?\([\+\-]\),? ?(\d+)?"
     hour_pattern = r"(\d{2}):\d{2}:\d{2}"
 
-    commits = {}
+
 
     # 1.3.Process logs for each repository
-    for repo_log in repo_logs.items():
-        log_data = repo_log[1]
-        repo = repo_log[0]
-        lines = log_data.splitlines()
-        log_csv = "result/git_log_{}.csv".format(repo.split('/')[-1])
-        commits[log_csv] = []
+    def process_log(dict_name: dict, create_db: bool):
+        commits = {}
 
-        for line in lines:
-            commit_match = re.match(commit_pattern, line)
-            summary_match = re.search(summary_pattern, line)
+        for repo_log in dict_name.items():
+            log_data = repo_log[1]
+            repo = repo_log[0]
+            log_csv = "result/git_log_{}.csv".format(repo.split('/')[-1])
+            lines = log_data.splitlines()
+            commits[repo] = []
 
-            if commit_match:
-                timestamp = commit_match.group(2)
-                hour_match = re.search(hour_pattern, timestamp)
+            for line in lines:
+                commit_match = re.match(commit_pattern, line)
+                summary_match = re.search(summary_pattern, line)
 
-                commits[log_csv].append({
-                    "repo": repo,
-                    "commit": commit_match.group(1),
-                    "date": commit_match.group(2),
-                    "hour": int(hour_match.group(1)) if hour_match else 0,
-                    "email": commit_match.group(3),
-                    "num_changes": 0,
-                })
-            elif summary_match and commits[log_csv]:
-                num_insertions = int(summary_match.group(2)) if summary_match.group(2) else 0
-                num_deletions = int(summary_match.group(3)) if summary_match.group(3) else 0
-                commits[log_csv][-1]["num_changes"] = num_insertions + num_deletions
+                if commit_match:
+                    timestamp = commit_match.group(2)
+                    hour_match = re.search(hour_pattern, timestamp)
 
-        # Save git log from repo to separate CSV file
-        pd.DataFrame(commits[log_csv]).to_csv(log_csv, index=False)
+                    commits[repo].append({
+                        "repo": repo,
+                        "commit": commit_match.group(1),
+                        "date": commit_match.group(2),
+                        "hour": int(hour_match.group(1)) if hour_match else 0,
+                        "email": commit_match.group(3),
+                        "num_changes": 0,
+                    })
+                elif summary_match and commits[repo]:
+                    num_insertions = int(summary_match.group(2)) if summary_match.group(2) else 0
+                    num_deletions = int(summary_match.group(3)) if summary_match.group(3) else 0
+                    commits[repo][-1]["num_changes"] = num_insertions + num_deletions
+                if create_db:
+                    pd.DataFrame(commits[repo]).to_csv(log_csv, index=False)
+        return commits
+
+    repo_logs_full = process_log(repo_logs, True)
+    repo_logs_new = process_log(repo_logs_upd, False)
+
 
     # 1.4 Read data from cvs & save df to csv with all repos data
-    df = pd.concat([pd.read_csv(file) for file in repo_log_csv], ignore_index=True)
+    df = pd.concat([pd.read_csv(file) for file in repo_log_csv if os.path.exists(file)], ignore_index=True)
     df.to_csv(csv_path, index=False)
-
     return df
+
+
