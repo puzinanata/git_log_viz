@@ -14,12 +14,12 @@ def collect_data(
     # Command to extract data from git log
     command = "git log --pretty=format:'%H %ad %ae' --stat --no-merges"
     command_last_commit = "git log -1 --pretty=format:'%H' --no-merges"
+    # Command to update local git repo
     command_pull = "git pull &> /dev/null"
-    # command_pull = "true"
 
     # Dictionary to store the log data for each repository
-    repo_logs = {}
-    repo_logs_upd = {}
+    repo_logs = {}  # dict to keep full repo
+    repo_logs_upd = {}  # dict to keep only new commits after pulling
 
     # Loop for iteration through repos
     for repo_path, repo_csv in zip(repo_name, repo_log_csv):
@@ -30,7 +30,7 @@ def collect_data(
             capture_output=True
         ).stdout.strip()
 
-        print(f"Last commit in {repo_path} before update:", last_commit_before_pull)
+        print(f"Last commit in {repo_path} before pulling:", last_commit_before_pull)
 
         last_commit_after_pull = subprocess.run(
             f"cd {repo_path}; {command_pull}; {command_last_commit}",
@@ -39,7 +39,7 @@ def collect_data(
             capture_output=True
         ).stdout.strip()
 
-        print(f"Last commit in {repo_path} after update:", last_commit_after_pull)
+        print(f"Last commit in {repo_path} after pulling:", last_commit_after_pull)
 
         if not os.path.exists(repo_csv):
             print(f"DB csv file '{repo_csv}' doesn't exist.")
@@ -52,7 +52,7 @@ def collect_data(
             repo_logs[repo_path] = result
 
         else:
-            print(f"DB csv file '{repo_csv}' exist so checking new commits...")
+            print(f"DB csv file '{repo_csv}' exists so checking new commits...")
 
             last_commit_from_csv = ""
             df_existing = pd.read_csv(repo_csv) if os.path.exists(repo_csv) else pd.DataFrame()
@@ -64,8 +64,11 @@ def collect_data(
             if last_commit_after_pull == last_commit_from_csv:
                 print(f"No updates in {repo_path}")
             else:
-                command_new_commits = f"git log {last_commit_from_csv}..HEAD --pretty=format:'%H %ad %ae' --stat --no-merges"
-                count_new_commits = f"git log {last_commit_from_csv}..HEAD --pretty=format:'%H' --no-merges | wc -l"
+                command_new_commits = (f"git log "
+                                       f"{last_commit_from_csv}"
+                                       f"..HEAD --pretty=format:'%H %ad %ae' --stat --no-merges"
+                                       )
+                count_new_commits = f"git rev-list --count {last_commit_from_csv}..HEAD --no-merges"
 
                 new_commits = subprocess.run(
                     f"cd {repo_path}; {command_new_commits}",
@@ -82,7 +85,7 @@ def collect_data(
                 ).stdout.strip()
 
                 if int(count_commit) == 0:
-                    print(f"No commits will be added in {repo_path}")
+                    print(f"No commits will be added to {repo_path}")
                 else:
                     print(f"{count_commit} new commits in {repo_path} should be added after update to csv")
                     repo_logs_upd[repo_path] = new_commits
@@ -107,8 +110,6 @@ def collect_data(
     #  2 file changed, 0 deletions(-)
     summary_pattern = r"(\d+) files? \S+, (\d+) \S+?\([\+\-]\),? ?(\d+)?"
     hour_pattern = r"(\d{2}):\d{2}:\d{2}"
-
-
 
     # 1.3.Process logs for each repository
     def process_log(dict_name: dict, create_db: bool):
@@ -144,12 +145,10 @@ def collect_data(
             if create_db:
                 pd.DataFrame(commits[repo]).to_csv(log_csv, index=False)
             else:
-                print("Need to add data", log_csv)
-                #pd.DataFrame(commits[repo]).to_csv(
-                #    log_csv,
-                #    mode='a',
-                #    header=not pd.io.common.file_exists(log_csv),
-                #    index=False)
+                df_combined = pd.concat(
+                    [pd.DataFrame(commits[repo]),
+                     pd.read_csv(log_csv)], ignore_index=True).drop_duplicates(subset=["commit"])
+                df_combined.to_csv(log_csv, index=False)
 
     # create new DB
     process_log(repo_logs, True)
@@ -160,5 +159,3 @@ def collect_data(
     df = pd.concat([pd.read_csv(file) for file in repo_log_csv], ignore_index=True)
     df.to_csv(csv_path, index=False)
     return df
-
-
