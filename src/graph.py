@@ -51,7 +51,7 @@ def graph_table(
         "Rank": list(range(1, len(top_x_authors) + 1)),
         "Author": top_x_authors.index.tolist(),
         f"{column_name}": [f"{value:,}".replace(",", " ") for value in (top_x_authors.values.tolist())],
-        "Share of Author in %": (top_x_authors.values/total_count * 100).round(0).astype(int).tolist()
+        "Share of Author in %": (top_x_authors.values/total_count * 100).round(2).tolist()
     }
 
     fig = ff.create_table([list(table_data.keys())] + list(zip(*table_data.values())))
@@ -135,11 +135,27 @@ def graph_pie(
     data = top_x_authors.reset_index()
     data.columns = ['Author', counter]
 
+    total_value = data[counter].sum()
+
+    # Filter out authors with less than 1% and add them to 'Others'
+    filtered_data = data[data[counter] / total_value * 100 >= 1]
+    others_data = data[data[counter] / total_value * 100 < 1]
+
+    if not others_data.empty:
+        others_value = others_data[counter].sum()
+        others_df = pd.DataFrame({'Author': ['Others'], counter: [others_value]})
+        filtered_data = pd.concat([filtered_data, others_df], ignore_index=True)
+
     fig = px.pie(
-        data,
+        filtered_data,
         values=counter,
         names='Author',
         title=f"Top {num_top} Authors by {title} {title_date}"
+    )
+
+    fig.update_traces(
+        textinfo="percent",
+        texttemplate="%{percent:.1%}"
     )
 
     fig.write_image(fig_file_name, scale=2)
@@ -170,12 +186,21 @@ def graph_line_author(
         markers=True)
 
     fig.update_layout(
+        title=dict(
+            text=f"Count of commits by top authors {title}",
+            x=0.5,
+            xanchor='center',
+            y=0.99,  # Position the title slightly above the plot (adjust if necessary)
+            yanchor='top',
+            font=dict(size=16)
+        ),
         legend=dict(
             orientation="h",
             yanchor="bottom",
             y=1.02,
             xanchor="right",
-            x=1
+            x=1,
+            font=dict(size=10)
         ),
         title_x=0.5,
         showlegend=True,
@@ -186,7 +211,7 @@ def graph_line_author(
         )
     )
 
-    fig.write_image(fig_file_name, width=1409, height=450, scale=2)
+    fig.write_image(fig_file_name, width=1424, height=450, scale=2)
     return fig.to_json()
 
 
