@@ -24,7 +24,7 @@ old_username = []
 new_username = []
 
 # Define number of top authors
-num_top = 50
+num_top = 15
 
 # Choose local hour or UTC hour
 # hour = 'hour'
