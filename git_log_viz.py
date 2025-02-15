@@ -271,27 +271,40 @@ html_js_report = (
         templates.tail_template
 )
 
-# Building of  HTML report with static images
+# Building of HTML report with static images (two tabs)
 html_image_report = (
-        templates.head_template +
-        templates.image_template.format(path="fig1.png") +
-        templates.image_template.format(path="fig13.png") +
-        templates.table_image_template.format(path="fig2.png") +
-        templates.table_image_template.format(path="fig7.png") +
-        templates.image_double_template.format(path1="fig2a.png", path2="fig7b.png") +
-        templates.image_template.format(path="fig3.png") +
-        templates.image_template.format(path="fig9.png") +
-        templates.image_template.format(path="fig12.png") +
-        templates.image_template.format(path="fig4.png") +
-        templates.image_template.format(path="fig14.png") +
-        templates.table_image_template.format(path="fig5.png") +
-        templates.table_image_template.format(path="fig8.png") +
-        templates.image_double_template.format(path1="fig5a.png", path2="fig8b.png") +
-        templates.image_template.format(path="fig6.png") +
-        templates.image_template.format(path="fig10.png") +
-        templates.image_template.format(path="fig11.png") +
-        templates.tail_template
-              )
+    templates.head_js_template +
+
+    # Tab 1 Content for Image Report
+    templates.tab_1_template.format(
+        content="\n".join([
+            templates.image_template.format(path="fig1.png"),
+            templates.image_template.format(path="fig13.png"),
+            templates.table_image_template.format(path="fig2.png"),
+            templates.table_image_template.format(path="fig7.png"),
+            templates.image_double_template.format(path1="fig2a.png", path2="fig7b.png"),
+            templates.image_template.format(path="fig3.png"),
+            templates.image_template.format(path="fig9.png"),
+            templates.image_template.format(path="fig12.png"),
+        ])
+    ) +
+
+    # Tab 2 Content for Image Report
+    templates.tab_2_template.format(
+        content="\n".join([
+            templates.image_template.format(path="fig4.png"),
+            templates.image_template.format(path="fig14.png"),
+            templates.table_image_template.format(path="fig5.png"),
+            templates.table_image_template.format(path="fig8.png"),
+            templates.image_double_template.format(path1="fig5a.png", path2="fig8b.png"),
+            templates.image_template.format(path="fig6.png"),
+            templates.image_template.format(path="fig10.png"),
+            templates.image_template.format(path="fig11.png"),
+        ])
+    ) +
+
+    templates.tail_template
+)
 
 # write the JSON to the HTML template
 with open('result/html_report_plot.html', 'w') as f:
