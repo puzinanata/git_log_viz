@@ -235,26 +235,41 @@ fig11_json = graph.graph_heatmap(
 # Building of  HTML report with js
 html_js_report = (
         templates.head_js_template +
-        templates.graph_js_template.format(content=fig1_json, div_name="fig1") +
-        templates.graph_js_template.format(content=fig13_json, div_name="fig13") +
-        templates.table_js_template.format(content=fig2_json, div_name="fig2") +
-        templates.table_js_template.format(content=fig7_json, div_name="fig7") +
-        templates.graph_js_double_template.format(
-            content1=fig2a_json, content2=fig7b_json, div_name1="fig2a", div_name2="fig7b") +
-        templates.graph_js_template.format(content=fig3_json, div_name="fig3") +
-        templates.graph_js_template.format(content=fig9_json, div_name="fig9") +
-        templates.graph_js_template.format(content=fig12_json, div_name="fig12") +
-        templates.graph_js_template.format(content=fig4_json, div_name="fig4") +
-        templates.graph_js_template.format(content=fig14_json, div_name="fig14") +
-        templates.table_js_template.format(content=fig5_json, div_name="fig5") +
-        templates.table_js_template.format(content=fig8_json, div_name="fig8") +
-        templates.graph_js_double_template.format(
-            content1=fig5a_json, content2=fig8b_json, div_name1="fig5a", div_name2="fig8b") +
-        templates.graph_js_template.format(content=fig6_json, div_name="fig6") +
-        templates.graph_js_template.format(content=fig10_json, div_name="fig10") +
-        templates.graph_js_template.format(content=fig11_json, div_name="fig11") +
+
+        # Tab 1 Content
+        templates.tab_1_template.format(
+            content="\n".join([
+                templates.graph_js_template.format(content=fig1_json, div_name="fig1"),
+                templates.graph_js_template.format(content=fig13_json, div_name="fig13"),
+                templates.table_js_template.format(content=fig2_json, div_name="fig2"),
+                templates.table_js_template.format(content=fig7_json, div_name="fig7"),
+                templates.graph_js_double_template.format(
+                    content1=fig2a_json, content2=fig7b_json, div_name1="fig2a", div_name2="fig7b"
+                ),
+                templates.graph_js_template.format(content=fig3_json, div_name="fig3"),
+                templates.graph_js_template.format(content=fig9_json, div_name="fig9"),
+                templates.graph_js_template.format(content=fig12_json, div_name="fig12"),
+            ])
+        ) +
+
+        # Tab 2 Content
+        templates.tab_2_template.format(
+            content="\n".join([
+                templates.graph_js_template.format(content=fig4_json, div_name="fig4"),
+                templates.graph_js_template.format(content=fig14_json, div_name="fig14"),
+                templates.table_js_template.format(content=fig5_json, div_name="fig5"),
+                templates.table_js_template.format(content=fig8_json, div_name="fig8"),
+                templates.graph_js_double_template.format(
+                    content1=fig5a_json, content2=fig8b_json, div_name1="fig5a", div_name2="fig8b"
+                ),
+                templates.graph_js_template.format(content=fig6_json, div_name="fig6"),
+                templates.graph_js_template.format(content=fig10_json, div_name="fig10"),
+                templates.graph_js_template.format(content=fig11_json, div_name="fig11"),
+            ])
+        ) +
+
         templates.tail_template
-              )
+)
 
 # Building of  HTML report with static images
 html_image_report = (
