@@ -75,7 +75,7 @@ tab_1_template = """
 
 tab_2_template = """
 <!-- Tab 2 Content -->
-<div id="Last Year" class="tab-content">
+<div id="Last Year" class="tab-content active">
     {content}
 </div>
 """
