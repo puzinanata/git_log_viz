@@ -26,8 +26,8 @@ df, last_year_df = prep_data.process_data(
 )
 
 # Call function with data exploration
-# prep_data.explore_data(df)
-# prep_data.explore_data(last_year_df)
+prep_data.explore_data(df)
+prep_data.explore_data(last_year_df)
 
 # 3.Data Analysis and Data Visualisation
 
@@ -229,6 +229,17 @@ fig11_json = graph.graph_heatmap(
     "all_users"
 )
 
+fig15_json = graph.graph_bubble(
+    df,
+    "result/fig15.png",
+    "for All Years"
+)
+
+fig16_json = graph.graph_bubble(
+    last_year_df,
+    "result/fig16.png",
+    "in Last Year"
+)
 
 # Final Section of generation html reports
 
@@ -249,6 +260,7 @@ html_js_report = (
                 templates.graph_js_template.format(content=fig3_json, div_name="fig3"),
                 templates.graph_js_template.format(content=fig9_json, div_name="fig9"),
                 templates.graph_js_template.format(content=fig12_json, div_name="fig12"),
+                templates.graph_js_template.format(content=fig15_json, div_name="fig15"),
             ])
         ) +
 
@@ -265,6 +277,7 @@ html_js_report = (
                 templates.graph_js_template.format(content=fig6_json, div_name="fig6"),
                 templates.graph_js_template.format(content=fig10_json, div_name="fig10"),
                 templates.graph_js_template.format(content=fig11_json, div_name="fig11"),
+                templates.graph_js_template.format(content=fig16_json, div_name="fig16"),
             ])
         ) +
 
@@ -286,6 +299,7 @@ html_image_report = (
             templates.image_template.format(path="fig3.png"),
             templates.image_template.format(path="fig9.png"),
             templates.image_template.format(path="fig12.png"),
+            templates.image_template.format(path="fig15.png"),
         ])
     ) +
 
@@ -300,6 +314,7 @@ html_image_report = (
             templates.image_template.format(path="fig6.png"),
             templates.image_template.format(path="fig10.png"),
             templates.image_template.format(path="fig11.png"),
+            templates.image_template.format(path="fig16.png"),
         ])
     ) +
 

@@ -21,6 +21,9 @@ def collect_data(
     repo_logs = {}  # dict to keep full repo
     repo_logs_upd = {}  # dict to keep only new commits after pulling
 
+    # if isinstance(repo_log_csv, str):
+    #     repo_log_csv = [repo_log_csv]  # Wrap single string in a list
+
     # Loop for iteration through repos
     for repo_path, repo_csv in zip(repo_name, repo_log_csv):
         last_commit_before_pull = subprocess.run(

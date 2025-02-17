@@ -2,13 +2,16 @@
 
 # Choose repository: put name of repo
 repo_name = (
-    './git_repos/neo-go',
-    './git_repos/neofs-node',
-    './git_repos/neofs-sdk-go',
+    # './git_repos/neo-go',
+    # './git_repos/neofs-node',
+    # './git_repos/neofs-sdk-go',
+    # './git_repos/cpython',
+    './git_repos/node',
 )
 
 # Definition of name csv file(-s)
 repo_log_csv = []
+
 for repo in repo_name:
     repo_log_csv.append("result/git_log_{}.csv".format(repo.split('/')[-1]))
 

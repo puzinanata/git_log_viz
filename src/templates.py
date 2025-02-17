@@ -32,11 +32,9 @@ head_js_template = """<html>
         .tab-content {
             display: none;
             padding: 10px;
-            width: 100%;
         }
         .tab-content.active {
             display: block;
-            width: 100%;
         }
     </style>
     <script>

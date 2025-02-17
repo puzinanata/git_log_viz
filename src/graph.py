@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 
 
 def graph_line(
-        df: pd,
+        df: pd.DataFrame,
         fig_file_name: str,
         column_name_date: str,
         title: str,
@@ -28,7 +28,7 @@ def graph_line(
 
 
 def graph_table(
-        df: pd,
+        df: pd.DataFrame,
         fig_file_name: str,
         column_name_date: str,
         author: str,
@@ -61,7 +61,7 @@ def graph_table(
 
 
 def graph_bar_line(
-        df: pd,
+        df: pd.DataFrame,
         fig_file_name: str,
         column_name_date: str,
         title: str,
@@ -109,7 +109,7 @@ def graph_bar_line(
 
 
 def graph_pie(
-        df,
+        df: pd.DataFrame,
         fig_file_name: str,
         column_name_date: str,
         title: str,
@@ -163,7 +163,7 @@ def graph_pie(
 
 
 def graph_line_author(
-        df,
+        df: pd.DataFrame,
         fig_file_name: str,
         column_name_date: str,
         author: str,
@@ -216,15 +216,14 @@ def graph_line_author(
 
 
 def graph_heatmap(
-        df,
+        df: pd.DataFrame,
         fig_file_name: str,
         hour: str,
         author: str,
         num_top: int,
         title_user: str,
-        title_period,
+        title_period: str,
         mode: str):
-
 
     if mode == "top_authors":
         commit_count = df.groupby([hour, author]).size().unstack(fill_value=0)
@@ -294,4 +293,25 @@ def graph_heatmap(
     )
 
     fig.write_image(fig_file_name, width=1409, scale=2)
+    return fig.to_json()
+
+
+def graph_bubble(
+        df: pd.DataFrame,
+        fig_file_name: str,
+        title_period: str,):
+
+    commit_count = df.groupby('repo').size().reset_index(name='commit_count')
+
+    fig = px.scatter(
+        commit_count,
+        x='repo',
+        y='commit_count',
+        size='commit_count',
+        title=f"Commit Count by Repo {title_period}",
+        labels={'commit_count': 'Total Commits', 'repo': 'Repositories'}
+    )
+    fig.update_layout(title_x=0.5)
+
+    fig.write_image(fig_file_name, width=1424, height=450, scale=2)
     return fig.to_json()
