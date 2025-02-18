@@ -6,7 +6,7 @@ repo_name = (
     # './git_repos/neofs-node',
     # './git_repos/neofs-sdk-go',
     # './git_repos/cpython',
-    './git_repos/node',
+    '$HOME/Documents/git_repos/node',
 )
 
 # Definition of name csv file(-s)
