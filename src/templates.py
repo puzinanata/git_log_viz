@@ -30,28 +30,45 @@ head_js_template = """<html>
             border-bottom: 3px solid #007bff;
         }
         .tab-content {
-            display: none;
-            padding: 10px;
+            visibility: hidden;
+            position: absolute;
+            width: 100%;
         }
         .tab-content.active {
-            display: block;
+            visibility: visible;
+            position: relative;
         }
+        .graph-container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+        .graph-container > div {
+            flex: 1;
+            max-width: 100%;
+        }
+
     </style>
     <script>
         function switchTab(tabName) {
-            // Hide all tab content
+            // Hide all tab contents properly
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
-
-            // Deactivate all tabs
+        
+            // Remove 'active' class from all tabs
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
-
+        
             // Show the selected tab and mark it active
             document.getElementById(tabName).classList.add('active');
             document.querySelector(`[data-tab='${tabName}']`).classList.add('active');
+        
+            // Force Plotly to resize properly
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+            }, 100);
         }
     </script>
 </head>
@@ -73,7 +90,7 @@ tab_1_template = """
 
 tab_2_template = """
 <!-- Tab 2 Content -->
-<div id="Last Year" class="tab-content active">
+<div id="Last Year" class="tab-content">
     {content}
 </div>
 """
@@ -91,7 +108,9 @@ tail_template = """
 </html>"""
 
 graph_js_template = """
-    <div id='{div_name}'></div>
+    <div class="graph-container">
+        <div id='{div_name}'></div>
+    </div>
     <script>
         var plotly_data = {content}
         Plotly.react('{div_name}', plotly_data.data, plotly_data.layout);
