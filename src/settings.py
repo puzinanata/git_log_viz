@@ -9,7 +9,7 @@ repo_name = (
     '$HOME/Documents/git_repos/node',
 )
 # Define minimal amount of repos for building graph by repos:
-repo_count = 10
+repo_count = 5
 
 # Definition of name csv file(-s)
 repo_log_csv = []

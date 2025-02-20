@@ -334,5 +334,5 @@ with open('result/html_report_plot.html', 'w') as f:
     f.write(html_js_report)
 
 # write image to the HTML template
-with open('result/html_report_plot_image.html', 'w') as f:
+with open('templates/html_report_plot_image.html', 'w') as f:
     f.write(html_image_report)

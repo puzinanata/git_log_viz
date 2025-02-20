@@ -1,0 +1,171 @@
+<html>
+<head>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        /* Tab styling */
+        .tab-container {
+            display: flex;
+            justify-content: center;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 10px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-family: Arial, sans-serif;
+            border: none;
+            background: none;
+            outline: none;
+            color: #555;
+        }
+        .tab:hover {
+            color: #000;
+        }
+        .tab.active {
+            font-weight: bold;
+            color: #000;
+            border-bottom: 3px solid #007bff;
+        }
+        .tab-content {
+            visibility: hidden;
+            position: absolute;
+            width: 100%;
+        }
+        .tab-content.active {
+            visibility: visible;
+            position: relative;
+        }
+        .graph-container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+        .graph-container > div {
+            flex: 1;
+            max-width: 100%;
+        }
+
+    </style>
+    <script>
+        function switchTab(tabName) {
+            // Hide all tab contents properly
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+        
+            // Remove 'active' class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+        
+            // Show the selected tab and mark it active
+            document.getElementById(tabName).classList.add('active');
+            document.querySelector(`[data-tab='${tabName}']`).classList.add('active');
+        
+            // Force Plotly to resize properly
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+            }, 100);
+        }
+    </script>
+</head>
+<body>
+
+<!-- Tab Navigation -->
+<div class="tab-container">
+    <button class="tab active" data-tab="All Years" onclick="switchTab('All Years')">All Years</button>
+    <button class="tab" data-tab="Last Year" onclick="switchTab('Last Year')">Last Year</button>
+</div>
+
+<!-- Tab 1 Content -->
+<div id="All Years" class="tab-content active">
+    
+<img src="fig1.png" style="max-width: 100%; height: auto;">
+
+
+<img src="fig13.png" style="max-width: 100%; height: auto;">
+
+
+    <p style="text-align: center; font-size: 18px; font-family: Arial, sans-serif; margin: 30px 0; color:#444">
+        Top Authors
+    </p>
+
+<img src="fig2.png" style="max-width: 100%; height: auto;">
+
+
+
+    <p style="text-align: center; font-size: 18px; font-family: Arial, sans-serif; margin: 30px 0; color:#444">
+        Top Authors
+    </p>
+
+<img src="fig7.png" style="max-width: 100%; height: auto;">
+
+
+
+<div style="display: flex; justify-content: space-between; gap: 20px;">
+    <img src="fig2a.png" style="max-width: 48%; height: auto;">
+    <img src="fig7b.png" style="max-width: 48%; height: auto;">
+</div>
+
+
+<img src="fig3.png" style="max-width: 100%; height: auto;">
+
+
+<img src="fig9.png" style="max-width: 100%; height: auto;">
+
+
+<img src="fig12.png" style="max-width: 100%; height: auto;">
+
+
+<img src="fig15.png" style="max-width: 100%; height: auto;">
+
+</div>
+
+<!-- Tab 2 Content -->
+<div id="Last Year" class="tab-content">
+    
+<img src="fig4.png" style="max-width: 100%; height: auto;">
+
+
+<img src="fig14.png" style="max-width: 100%; height: auto;">
+
+
+    <p style="text-align: center; font-size: 18px; font-family: Arial, sans-serif; margin: 30px 0; color:#444">
+        Top Authors
+    </p>
+
+<img src="fig5.png" style="max-width: 100%; height: auto;">
+
+
+
+    <p style="text-align: center; font-size: 18px; font-family: Arial, sans-serif; margin: 30px 0; color:#444">
+        Top Authors
+    </p>
+
+<img src="fig8.png" style="max-width: 100%; height: auto;">
+
+
+
+<div style="display: flex; justify-content: space-between; gap: 20px;">
+    <img src="fig5a.png" style="max-width: 48%; height: auto;">
+    <img src="fig8b.png" style="max-width: 48%; height: auto;">
+</div>
+
+
+<img src="fig6.png" style="max-width: 100%; height: auto;">
+
+
+<img src="fig10.png" style="max-width: 100%; height: auto;">
+
+
+<img src="fig11.png" style="max-width: 100%; height: auto;">
+
+
+<img src="fig16.png" style="max-width: 100%; height: auto;">
+
+</div>
+
+</body>
+
+</html>

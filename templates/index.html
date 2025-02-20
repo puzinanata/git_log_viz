@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git Analytics Report Settings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            max-width: 600px;
+            background-color: #f4f4f4;
+        }
+        h2 {
+            text-align: center;
+        }
+        form {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+        select, input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px;
+            width: 100%;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Configure Git Analytics Report</h2>
+
+    <form id="settingsForm" action="/generate_report" method="post">
+
+        <!-- Repository Selection -->
+        <label for="repo_input">Enter Repository Paths:</label>
+        <input type="text" id="repo_input" placeholder="Enter repo path and press Add">
+        <button type="button" onclick="addRepo()">Add</button>
+
+        <ul id="repo_list"></ul>
+        <input type="hidden" name="repo" id="repo_hidden">
+    <script>
+        let repos = [];
+
+        function addRepo() {
+            let inputField = document.getElementById("repo_input");
+            let repoPath = inputField.value.trim();
+
+            if (repoPath !== "" && !repos.includes(repoPath)) {
+                repos.push(repoPath);
+                updateRepoList();
+            }
+
+            inputField.value = ""; // Clear input field
+        }
+
+        function updateRepoList() {
+            let repoListElement = document.getElementById("repo_list");
+            repoListElement.innerHTML = ""; // Clear existing list
+
+            repos.forEach((repo, index) => {
+                let listItem = document.createElement("li");
+                listItem.textContent = repo + " ";
+
+                let removeButton = document.createElement("button");
+                removeButton.textContent = "Remove";
+                removeButton.onclick = function() {
+                    repos.splice(index, 1);
+                    updateRepoList();
+                };
+
+                listItem.appendChild(removeButton);
+                repoListElement.appendChild(listItem);
+            });
+
+            // Update hidden input field for form submission
+            document.getElementById("repo_hidden").value = JSON.stringify(repos);
+        }
+    </script>
+
+        <!-- Start Year -->
+        <label for="start_year">Start Year:</label>
+        <input type="number" name="start_year" id="start_year" min="1900" max="2025" value="1900">
+
+        <!-- Finish Year -->
+        <label for="finish_year">Finish Year:</label>
+        <input type="number" name="finish_year" id="finish_year" min="1900" max="2025" value="2025">
+
+        <!-- Author Selection -->
+        <label for="author">Choose Author Type:</label>
+        <select name="author" id="author">
+            <option value="username">Username</option>
+            <option value="email">Email</option>
+        </select>
+
+        <!-- Exclude Specific User -->
+        <label for="exclude_username">Exclude Usernames (comma-separated):</label>
+        <input type="text" name="exclude_username" id="exclude_username" placeholder="e.g., user1,user2">
+
+        <!-- Combine Usernames -->
+        <label for="old_username">Old Usernames (comma-separated):</label>
+        <input type="text" name="old_username" id="old_username" placeholder="e.g., user_old1,user_old2">
+
+        <label for="new_username">New Username (to merge above into):</label>
+        <input type="text" name="new_username" id="new_username" placeholder="e.g., user_new">
+
+        <!-- Number of Top Authors -->
+        <label for="num_top">Number of Top Authors:</label>
+        <input type="number" name="num_top" id="num_top" min="1" max="100" value="15">
+
+        <!-- Time Format -->
+        <label for="hour">Choose Hour Format:</label>
+        <select name="hour" id="hour">
+            <option value="hour">Local Hour</option>
+            <option value="utc_hour">UTC Hour</option>
+        </select>
+
+        <button type="submit">Generate Report</button>
+    </form>
+
+</body>
+</html>
