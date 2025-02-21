@@ -1,16 +1,33 @@
-from src import settings
+import json
 from src import templates
 from src import graph
 from src import prep_data
 from src import collect
+
+# Load settings from JSON
+try:
+    with open("settings.json", "r") as file:
+        settings = json.load(file)
+except Exception as e:
+    print("Error loading settings.json:", e)
+    exit(1)
+
+# Generate repo_log_csv dynamically
+repo_log_csv = ["result/git_log_{}.csv".format(repo.split('/')[-1]) for repo in settings["repo_name"]]
+
+# Add it to settings dynamically
+settings["repo_log_csv"] = repo_log_csv  # Now settings["repo_log_csv"] contains generated file names
+
+with open("settings.json", "w") as file:
+    json.dump(settings, file, indent=4)
 
 # 1. Data Collection
 
 # Call function with extracted data in df
 collect.collect_data(
     "result/all_repos_data.csv",
-    settings.repo_name,
-    settings.repo_log_csv
+    settings["repo_name"],
+    settings["repo_log_csv"]
 )
 
 # 2. Data Cleaning and Data Processing
@@ -18,11 +35,11 @@ collect.collect_data(
 # Call function with cleaned and processed df
 df, last_year_df = prep_data.process_data(
     "result/all_repos_data.csv",
-    settings.exclude_username,
-    settings.old_username,
-    settings.new_username,
-    settings.start_year,
-    settings.finish_year
+    settings["exclude_username"],
+    settings["old_username"],
+    settings["new_username"],
+    settings["start_year"],
+    settings["finish_year"]
 )
 
 # Call function with data exploration
@@ -54,8 +71,8 @@ fig2_json = graph.graph_table(
     df,
     "result/fig2.png",
     'year',
-    settings.author,
-    settings.num_top,
+    settings["author"],
+    settings["num_top"],
     'commit_count',
     "Total Commits"
 )
@@ -65,8 +82,8 @@ fig5_json = graph.graph_table(
     last_year_df,
     "result/fig5.png",
     'month_year',
-    settings.author,
-    settings.num_top,
+    settings["author"],
+    settings["num_top"],
     'commit_count',
     "Total Commits"
 )
@@ -76,8 +93,8 @@ fig7_json = graph.graph_table(
     df,
     "result/fig7.png",
     'year',
-    settings.author,
-    settings.num_top,
+    settings["author"],
+    settings["num_top"],
     'num_changes',
     "Total Changes (insertions+deletions)"
 )
@@ -87,8 +104,8 @@ fig8_json = graph.graph_table(
     last_year_df,
     "result/fig8.png",
     'month_year',
-    settings.author,
-    settings.num_top,
+    settings["author"],
+    settings["num_top"],
     'num_changes',
     "Total Changes (insertions+deletions)"
 )
@@ -117,8 +134,8 @@ fig2a_json = graph.graph_pie(
     "result/fig2a.png",
     'year',
     "Commit Count",
-    settings.author,
-    settings.num_top,
+    settings["author"],
+    settings["num_top"],
     'commit_count',
     "for All Years"
 )
@@ -129,8 +146,8 @@ fig7b_json = graph.graph_pie(
     "result/fig7b.png",
     'year',
     "Share of Changes",
-    settings.author,
-    settings.num_top,
+    settings["author"],
+    settings["num_top"],
     'num_changes',
     "for All Years"
 )
@@ -141,8 +158,8 @@ fig5a_json = graph.graph_pie(
     "result/fig5a.png",
     'month_year',
     "Commit Count",
-    settings.author,
-    settings.num_top,
+    settings["author"],
+    settings["num_top"],
     'commit_count',
     "in Last Year"
 )
@@ -153,8 +170,8 @@ fig8b_json = graph.graph_pie(
     "result/fig8b.png",
     'month_year',
     "Share of Changes",
-    settings.author,
-    settings.num_top,
+    settings["author"],
+    settings["num_top"],
     'num_changes',
     "in Last Year"
 )
@@ -164,8 +181,8 @@ fig3_json = graph.graph_line_author(
     df,
     "result/fig3.png",
     'year',
-    settings.author,
-    settings.num_top,
+    settings["author"],
+    settings["num_top"],
     "by Year",
     '1'
 )
@@ -175,8 +192,8 @@ fig6_json = graph.graph_line_author(
     last_year_df,
     "result/fig6.png",
     'month_year',
-    settings.author,
-    settings.num_top,
+    settings["author"],
+    settings["num_top"],
     "in Last Year",
     'M1'
 )
@@ -185,9 +202,9 @@ fig6_json = graph.graph_line_author(
 fig9_json = graph.graph_heatmap(
     df,
     "result/fig9.png",
-    settings.hour,
-    settings.author,
-    settings.num_top,
+    settings["hour"],
+    settings["author"],
+    settings["num_top"],
     "Top Authors",
     "All Years",
     "top_authors"
@@ -197,9 +214,9 @@ fig9_json = graph.graph_heatmap(
 fig10_json = graph.graph_heatmap(
     last_year_df,
     "result/fig10.png",
-    settings.hour,
-    settings.author,
-    settings.num_top,
+    settings["hour"],
+    settings["author"],
+    settings["num_top"],
     "Top Authors",
     "Last Year",
     "top_authors"
@@ -209,9 +226,9 @@ fig10_json = graph.graph_heatmap(
 fig12_json = graph.graph_heatmap(
     df,
     "result/fig12.png",
-    settings.hour,
-    settings.author,
-    settings.num_top,
+    settings["hour"],
+    settings["author"],
+    settings["num_top"],
     "All Users",
     "All Years",
     "all_users"
@@ -221,9 +238,9 @@ fig12_json = graph.graph_heatmap(
 fig11_json = graph.graph_heatmap(
     last_year_df,
     "result/fig11.png",
-    settings.hour,
-    settings.author,
-    settings.num_top,
+    settings["hour"],
+    settings["author"],
+    settings["num_top"],
     "All Users",
     "Last Year",
     "all_users"
@@ -334,5 +351,5 @@ with open('result/html_report_plot.html', 'w') as f:
     f.write(html_js_report)
 
 # write image to the HTML template
-with open('templates/html_report_plot_image.html', 'w') as f:
+with open('result/html_report_plot_image.html', 'w') as f:
     f.write(html_image_report)
