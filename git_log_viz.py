@@ -279,7 +279,7 @@ html_js_report = (
                 templates.graph_js_template.format(content=fig12_json, div_name="fig12"),
             ] + (
                 [templates.graph_js_template.format(content=fig15_json, div_name="fig15")]
-                if len(settings.repo_name) >= settings.repo_count else []
+                if len(settings["repo_name"]) >= settings["repo_count"] else []
             ))
         ) +
 
@@ -298,7 +298,7 @@ html_js_report = (
                 templates.graph_js_template.format(content=fig11_json, div_name="fig11"),
             ] + (
                 [templates.graph_js_template.format(content=fig16_json, div_name="fig16")]
-                if len(settings.repo_name) >= settings.repo_count else []
+                if len(settings["repo_name"]) >= settings["repo_count"] else []
             ))
         ) +
 
@@ -322,7 +322,7 @@ html_image_report = (
             templates.image_template.format(path="fig12.png"),
         ] + (
             [templates.image_template.format(path="fig15.png")]
-            if len(settings.repo_name) >= settings.repo_count else []
+            if len(settings["repo_name"]) >= settings["repo_count"] else []
         ))
     ) +
 
@@ -339,7 +339,7 @@ html_image_report = (
             templates.image_template.format(path="fig11.png"),
         ] + (
             [templates.image_template.format(path="fig16.png")]
-            if len(settings.repo_name) >= settings.repo_count else []
+            if len(settings["repo_name"]) >= settings["repo_count"] else []
         ))
     ) +
 
@@ -351,5 +351,5 @@ with open('result/html_report_plot.html', 'w') as f:
     f.write(html_js_report)
 
 # write image to the HTML template
-with open('result/html_report_plot_image.html', 'w') as f:
+with open('templates/report.html', 'w') as f:
     f.write(html_image_report)

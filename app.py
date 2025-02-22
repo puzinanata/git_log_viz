@@ -12,11 +12,15 @@ def index():
 def generate_report():
     # Get form data
     repo_list = request.form.get("repo")
-    repo_count = request.form.get("repo_count", 5)
-    start_year = request.form.get("start_year", 1900)
-    finish_year = request.form.get("finish_year", 2025)
-    author_type = request.form.get("author", "username")
-    num_top = request.form.get("num_top", 10)
+    repo_count = request.form.get("repo_count")
+    start_year = request.form.get("start_year")
+    finish_year = request.form.get("finish_year")
+    author_type = request.form.get("author")
+    excl_list = request.form.get("exclude_username")
+    old_list = request.form.get("old_username")
+    new_list = request.form.get("new_username")
+    num_top = request.form.get("num_top")
+    hour_type = request.form.get("hour")
 
     # Convert repo list from JSON string to Python list
     repo_list = json.loads(repo_list)
@@ -28,7 +32,11 @@ def generate_report():
         "start_year": int(start_year),
         "finish_year": int(finish_year),
         "author": author_type,
-        "num_top": int(num_top)
+        "exclude_username": excl_list,
+        "old_username": old_list,
+        "new_username": new_list,
+        "num_top": int(num_top),
+        "hour": hour_type
     }
 
     # Here, you would update your existing settings script to use these values
