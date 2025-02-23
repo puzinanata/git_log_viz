@@ -32,11 +32,11 @@ def process_data(
     df['repo'] = df['repo'].str.split('/').str[-1]
 
     # Filtering data
-    # Exclude the username
-    df = df[~df['username'].isin(exclude_username)]
-
-    # Replace all occurrences of old username with new username
-    df['username'] = df['username'].replace(old_username, new_username)
+    # # Exclude the username
+    # df = df[~df['username'].isin(exclude_username)]
+    #
+    # # Replace all occurrences of old username with new username
+    # df['username'] = df['username'].replace(old_username, new_username)
 
     # Transfer username to lower case
     df['username'] = df['username'].str.lower()

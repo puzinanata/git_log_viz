@@ -35,9 +35,9 @@ collect.collect_data(
 # Call function with cleaned and processed df
 df, last_year_df = prep_data.process_data(
     "result/all_repos_data.csv",
-    settings["exclude_username"],
-    settings["old_username"],
-    settings["new_username"],
+    # settings["exclude_username"],
+    # settings["old_username"],
+    # settings["new_username"],
     settings["start_year"],
     settings["finish_year"]
 )

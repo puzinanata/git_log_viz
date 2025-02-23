@@ -1,19 +1,14 @@
 {
     "repo_name": [
-        "/Users/natalapuzina/Documents/git_repos/node",
-        "/Users/natalapuzina/Documents/git_repos/cpython"
+        "/Users/natalapuzina/Documents/git_repos/node"
     ],
     "repo_count": 2,
-    "start_year": 2003,
-    "finish_year": 2023,
+    "start_year": 2004,
+    "finish_year": 2024,
     "author": "username",
-    "exclude_username": "",
-    "old_username": "",
-    "new_username": "",
     "num_top": 10,
     "hour": "utc_hour",
     "repo_log_csv": [
-        "result/git_log_node.csv",
-        "result/git_log_cpython.csv"
+        "result/git_log_node.csv"
     ]
 }

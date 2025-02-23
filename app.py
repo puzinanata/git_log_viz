@@ -16,9 +16,9 @@ def generate_report():
     start_year = request.form.get("start_year")
     finish_year = request.form.get("finish_year")
     author_type = request.form.get("author")
-    excl_list = request.form.get("exclude_username")
-    old_list = request.form.get("old_username")
-    new_list = request.form.get("new_username")
+    # excl_list = request.form.get("exclude_username")
+    # old_list = request.form.get("old_username")
+    # new_list = request.form.get("new_username")
     num_top = request.form.get("num_top")
     hour_type = request.form.get("hour")
 
@@ -32,9 +32,9 @@ def generate_report():
         "start_year": int(start_year),
         "finish_year": int(finish_year),
         "author": author_type,
-        "exclude_username": excl_list,
-        "old_username": old_list,
-        "new_username": new_list,
+        # "exclude_username": excl_list,
+        # "old_username": old_list,
+        # "new_username": new_list,
         "num_top": int(num_top),
         "hour": hour_type
     }
