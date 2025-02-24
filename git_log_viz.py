@@ -1,4 +1,5 @@
 import json
+import os
 from src import templates
 from src import graph
 from src import prep_data
@@ -11,6 +12,9 @@ try:
 except Exception as e:
     print("Error loading settings.json:", e)
     exit(1)
+
+# Expand $HOME in repo paths
+expanded_repos = [os.path.expandvars(repo) for repo in settings["repo_name"]]
 
 # Generate repo_log_csv dynamically
 repo_log_csv = ["result/git_log_{}.csv".format(repo.split('/')[-1]) for repo in settings["repo_name"]]
@@ -35,9 +39,9 @@ collect.collect_data(
 # Call function with cleaned and processed df
 df, last_year_df = prep_data.process_data(
     "result/all_repos_data.csv",
-    # settings["exclude_username"],
-    # settings["old_username"],
-    # settings["new_username"],
+    settings["exclude_username"],
+    settings["old_username"],
+    settings["new_username"],
     settings["start_year"],
     settings["finish_year"]
 )
@@ -347,9 +351,9 @@ html_image_report = (
 )
 
 # write the JSON to the HTML template
-with open('result/html_report_plot.html', 'w') as f:
+with open('templates/report.html', 'w') as f:
     f.write(html_js_report)
 
 # write image to the HTML template
-with open('templates/report.html', 'w') as f:
+with open('result/html_report_image.html', 'w') as f:
     f.write(html_image_report)

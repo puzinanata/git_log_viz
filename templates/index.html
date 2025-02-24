@@ -55,51 +55,28 @@
 
     <form id="settingsForm" action="/generate_report" method="post">
 
-        <!-- Repository Selection -->
-        <label for="repo_input">Enter Repository Paths:</label>
-        <input type="text" id="repo_input" placeholder="Enter repo path and press Add">
-        <button type="button" onclick="addRepo()">Add</button>
+               <!-- Repository Selection -->
+        <label for="repo_input">Enter Repository Paths (comma-separated):</label>
+        <input type="text" id="repo_input" name="repo" placeholder="e.g., /path/to/repo1, /path/to/repo2" oninput="updateRepoList()">
+        <input type="hidden" name="repo_hidden" id="repo_hidden">
 
-        <ul id="repo_list"></ul>
-        <input type="hidden" name="repo" id="repo_hidden">
-    <script>
-        let repos = [];
+        <script>
+            function updateRepoList() {
+                let inputField = document.getElementById("repo_input");
+                let repoHidden = document.getElementById("repo_hidden");
 
-        function addRepo() {
-            let inputField = document.getElementById("repo_input");
-            let repoPath = inputField.value.trim();
+                // Convert input string to a list (or an empty list if no input)
+                let repos = inputField.value
+                    .split(',')
+                    .map(repo => repo.trim()) // Remove extra spaces
+                    .filter(repo => repo !== ""); // Remove empty values
 
-            if (repoPath !== "" && !repos.includes(repoPath)) {
-                repos.push(repoPath);
-                updateRepoList();
+                // Store the list as a JSON string in the hidden input field
+                repoHidden.value = JSON.stringify(repos);
             }
+        </script>
 
-            inputField.value = ""; // Clear input field
-        }
 
-        function updateRepoList() {
-            let repoListElement = document.getElementById("repo_list");
-            repoListElement.innerHTML = ""; // Clear existing list
-
-            repos.forEach((repo, index) => {
-                let listItem = document.createElement("li");
-                listItem.textContent = repo + " ";
-
-                let removeButton = document.createElement("button");
-                removeButton.textContent = "Remove";
-                removeButton.onclick = function() {
-                    repos.splice(index, 1);
-                    updateRepoList();
-                };
-
-                listItem.appendChild(removeButton);
-                repoListElement.appendChild(listItem);
-            });
-
-            // Update hidden input field for form submission
-            document.getElementById("repo_hidden").value = JSON.stringify(repos);
-        }
-    </script>
         <!-- Minimum Number of Repositories for Graph -->
         <label for="repo_count">Minimum Number of Repositories for Graph:</label>
         <input type="number" name="repo_count" id="repo_count" min="1">
@@ -119,16 +96,33 @@
             <option value="email">Email</option>
         </select>
 
-<!--        &lt;!&ndash; Exclude Specific User &ndash;&gt;-->
-<!--        <label for="exclude_username">Exclude Usernames (comma-separated):</label>-->
-<!--        <input type="text" name="exclude_username" id="exclude_username" placeholder="e.g., user1,user2">-->
+                <!-- Exclude Specific Users -->
+        <label for="exclude_username">Exclude Usernames (comma-separated):</label>
+        <input type="text" id="exclude_username" placeholder="e.g., user1,user2" oninput="updateUserList('exclude_username', 'exclude_hidden')">
+        <input type="hidden" name="exclude_username" id="exclude_hidden">
 
-<!--        &lt;!&ndash; Combine Usernames &ndash;&gt;-->
-<!--        <label for="old_username">Old Usernames (comma-separated):</label>-->
-<!--        <input type="text" name="old_username" id="old_username" placeholder="e.g., user_old1,user_old2">-->
+        <!-- Combine Old Usernames -->
+        <label for="old_username">Old Usernames (comma-separated):</label>
+        <input type="text" id="old_username" placeholder="e.g., user_old1,user_old2" oninput="updateUserList('old_username', 'old_hidden')">
+        <input type="hidden" name="old_username" id="old_hidden">
 
-<!--        <label for="new_username">New Username (to merge above into):</label>-->
-<!--        <input type="text" name="new_username" id="new_username" placeholder="e.g., user_new">-->
+        <!-- New Username (for merging old ones) -->
+        <label for="new_username">New Username (to merge above into):</label>
+        <input type="text" name="new_username" id="new_username" placeholder="e.g., user_new">
+
+        <script>
+            function updateUserList(inputId, hiddenInputId) {
+                let inputField = document.getElementById(inputId);
+                let hiddenField = document.getElementById(hiddenInputId);
+
+                let userList = inputField.value
+                    .split(',')
+                    .map(user => user.trim())  // Remove spaces
+                    .filter(user => user !== ""); // Remove empty entries
+
+                hiddenField.value = JSON.stringify(userList);
+            }
+        </script>
 
         <!-- Number of Top Authors -->
         <label for="num_top">Number of Top Authors:</label>
