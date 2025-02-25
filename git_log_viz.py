@@ -7,7 +7,7 @@ from src import collect
 
 # Load settings from JSON
 try:
-    with open("settings.json", "r") as file:
+    with open("result/settings.json", "r") as file:
         settings = json.load(file)
 except Exception as e:
     print("Error loading settings.json:", e)
@@ -22,7 +22,7 @@ repo_log_csv = ["result/git_log_{}.csv".format(repo.split('/')[-1]) for repo in 
 # Add it to settings dynamically
 settings["repo_log_csv"] = repo_log_csv  # Now settings["repo_log_csv"] contains generated file names
 
-with open("settings.json", "w") as file:
+with open("result/settings.json", "w") as file:
     json.dump(settings, file, indent=4)
 
 # 1. Data Collection

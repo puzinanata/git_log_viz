@@ -11,7 +11,6 @@ def index():
 
 
 @app.route('/generate_report', methods=['POST'])
-
 def generate_report():
     try:
         # Get form data with default values if missing
@@ -39,7 +38,8 @@ def generate_report():
             """Helper function to parse JSON or comma-separated lists."""
             if input_str:
                 try:
-                    return json.loads(input_str) if input_str.startswith("[") else [x.strip() for x in input_str.split(",") if x.strip()]
+                    return json.loads(input_str) if input_str.startswith("[") else [x.strip() for x in
+                                                                                    input_str.split(",") if x.strip()]
                 except json.JSONDecodeError:
                     return [x.strip() for x in input_str.split(",") if x.strip()]
             return []
@@ -84,7 +84,7 @@ def generate_report():
         }
 
         # Save settings to JSON file
-        with open("settings.json", "w") as f:
+        with open("result/settings.json", "w") as f:
             json.dump(settings, f, indent=4)
 
         # Run the script to generate the report
@@ -99,7 +99,7 @@ def generate_report():
 
 @app.route('/report')
 def report():
-    return render_template('report.html')  # Ensure report.html is inside 'templates/' folder
+    return render_template('report.html')
 
 
 if __name__ == '__main__':
