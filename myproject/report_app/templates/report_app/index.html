@@ -54,6 +54,7 @@
     <h2>Configure Git Analytics Report</h2>
 
     <form id="settingsForm" action="/generate_report" method="post">
+        {% csrf_token %}
 
                <!-- Repository Selection -->
         <label for="repo_input">Enter Repository Paths (comma-separated):</label>

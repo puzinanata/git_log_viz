@@ -311,10 +311,10 @@ html_js_report = (
 
 # Building of HTML report with static images (two tabs)
 html_image_report = (
-    templates.head_js_template +
+        templates.head_js_template +
 
-    # Tab 1 Content for Image Report
-    templates.tab_1_template.format(
+        # Tab 1 Content for Image Report
+        templates.tab_1_template.format(
         content="\n".join([
             templates.image_template.format(path="fig1.png"),
             templates.image_template.format(path="fig13.png"),
@@ -330,8 +330,8 @@ html_image_report = (
         ))
     ) +
 
-    # Tab 2 Content for Image Report
-    templates.tab_2_template.format(
+        # Tab 2 Content for Image Report
+        templates.tab_2_template.format(
         content="\n".join([
             templates.image_template.format(path="fig4.png"),
             templates.image_template.format(path="fig14.png"),
@@ -347,11 +347,11 @@ html_image_report = (
         ))
     ) +
 
-    templates.tail_template
+        templates.tail_template
 )
 
 # write the JSON to the HTML template
-with open('templates/report.html', 'w') as f:
+with open('report_app/templates/report_app/report.html', 'w') as f:
     f.write(html_js_report)
 
 # write image to the HTML template
