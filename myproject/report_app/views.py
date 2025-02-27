@@ -2,10 +2,21 @@ import json
 import subprocess
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
+from .models import Report
 
 
 def index(request):
     return render(request, "report_app/index.html")
+
+
+# Save report details to the database.
+def save_report(settings, file_path):
+    report = Report.objects.create(
+        report_name="Git Analytics Report",
+        settings_json=settings,
+        file_path=file_path
+    )
+    return report
 
 
 def generate_report(request):
@@ -79,6 +90,9 @@ def generate_report(request):
 
             # Run the script to generate the report
             subprocess.run(["python", "scripts/git_log_viz.py"], check=True)
+
+            # Save report metadata in the database
+            save_report(settings, "report_app/templates/report_app/report.html")
 
             return redirect("report")
 
