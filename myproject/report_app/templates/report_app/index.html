@@ -12,30 +12,31 @@
 
     <h2>Configure Git Analytics Report</h2>
 
-    <form id="settingsForm" action="/generate_report" method="post">
+    <form method="POST" action="{% url 'generate_report' %}">
         {% csrf_token %}
 
-               <!-- Repository Selection -->
-        <label for="repo_input">Enter Repository Paths (comma-separated):</label>
-        <input type="text" id="repo_input" name="repo" placeholder="e.g., $HOME/path/to/repo1, $HOME/path/to/repo2" oninput="updateRepoList()">
-        <input type="hidden" name="repo_hidden" id="repo_hidden">
+        <label for="repo">Select a Repository:</label>
+        <select name="repo" id="repo" onchange="updateRepoList()">
+            {% for repo in repos %}
+                <option value="{{ repo.path }}">{{ repo.name }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- Hidden input to store the JSON string of selected repos -->
+        <input type="hidden" name="repo_list" id="repo_hidden">
 
         <script>
             function updateRepoList() {
-                let inputField = document.getElementById("repo_input");
-                let repoHidden = document.getElementById("repo_hidden");
+                let inputField = document.getElementById("repo");  // Get the select element
+                let repoHidden = document.getElementById("repo_hidden");  // Get the hidden input
 
-                // Convert input string to a list (or an empty list if no input)
-                let repos = inputField.value
-                    .split(',')
-                    .map(repo => repo.trim()) // Remove extra spaces
-                    .filter(repo => repo !== ""); // Remove empty values
+                // Get the selected repo values
+                let selectedRepos = Array.from(inputField.selectedOptions).map(option => option.value);
 
-                // Store the list as a JSON string in the hidden input field
-                repoHidden.value = JSON.stringify(repos);
+                // Store the selected repos as a JSON string in the hidden input field
+                repoHidden.value = JSON.stringify(selectedRepos);
             }
         </script>
-
 
         <!-- Minimum Number of Repositories for Graph -->
         <label for="repo_count">Minimum Number of Repositories for Graph:</label>

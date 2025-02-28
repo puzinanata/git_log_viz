@@ -3,11 +3,12 @@ import subprocess
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from .models import Report
+from .models import Repository
 
 
 def index(request):
-    return render(request, "report_app/index.html")
-
+    repositories = Repository.objects.all()  # Get all saved repositories
+    return render(request, "report_app/index.html", {"repositories": repositories})
 
 # Save report details to the database.
 def save_report(settings, file_path):
