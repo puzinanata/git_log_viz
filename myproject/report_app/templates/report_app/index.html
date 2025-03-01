@@ -16,9 +16,11 @@
         {% csrf_token %}
 
         <label for="repo">Select a Repository:</label>
-        <select name="repo" id="repo" onchange="updateRepoList()">
-            {% for repo in repos %}
-                <option value="{{ repo.path }}">{{ repo.name }}</option>
+        <select name="repo" id="repo">
+             {% for repo in repos %}
+                 <option value="{{ repo.path }}">{{ repo.name }}</option>
+             {% empty %}
+                  <option>No repositories available</option>
             {% endfor %}
         </select>
 

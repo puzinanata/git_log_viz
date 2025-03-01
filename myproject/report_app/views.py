@@ -1,16 +1,18 @@
 import json
 import subprocess
+import os
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from .models import Report
-from .models import Repository
+from report_app.models import Report, Repository
+from django.conf import settings  # Import settings for dynamic file paths
 
 
 def index(request):
-    repositories = Repository.objects.all()  # Get all saved repositories
-    return render(request, "report_app/index.html", {"repositories": repositories})
+    repos = Repository.objects.all()  # Fix variable name for template consistency
+    print(repos)
+    return render(request, "report_app/index.html", {"repos": repos})
 
-# Save report details to the database.
+
 def save_report(settings, file_path):
     report = Report.objects.create(
         report_name="Git Analytics Report",
@@ -23,7 +25,7 @@ def save_report(settings, file_path):
 def generate_report(request):
     if request.method == "POST":
         try:
-            # Get form data with default values if missing
+            # Get form data safely
             repo_list = request.POST.get("repo", "").strip()
             repo_count = request.POST.get("repo_count", "0").strip()
             start_year = request.POST.get("start_year", "1900").strip()
@@ -41,11 +43,10 @@ def generate_report(request):
                     repo_list = json.loads(repo_list) if repo_list.startswith("[") else repo_list.split(",")
                 except json.JSONDecodeError:
                     repo_list = repo_list.split(",")
-            repo_list = [repo.strip() for repo in repo_list if repo.strip()]  # Clean spaces
+            repo_list = [repo.strip() for repo in repo_list if repo.strip()]
 
-            # Convert username lists safely (JSON format or comma-separated)
+            # Convert lists safely
             def parse_list(input_str):
-                """Helper function to parse JSON or comma-separated lists."""
                 if input_str:
                     try:
                         return json.loads(input_str) if input_str.startswith("[") else [
@@ -72,7 +73,7 @@ def generate_report(request):
             num_top = safe_int(num_top, 10)
 
             # Create settings dictionary
-            settings = {
+            settings_data = {
                 "repo_name": repo_list,
                 "repo_count": repo_count,
                 "start_year": start_year,
@@ -85,21 +86,30 @@ def generate_report(request):
                 "hour": hour_type,
             }
 
+            # Ensure result folder exists
+            result_dir = os.path.join(settings.BASE_DIR, "result")
+            os.makedirs(result_dir, exist_ok=True)
+
             # Save settings to JSON file
-            with open("result/settings.json", "w") as f:
-                json.dump(settings, f, indent=4)
+            settings_path = os.path.join(result_dir, "settings.json")
+            with open(settings_path, "w") as f:
+                json.dump(settings_data, f, indent=4)
 
             # Run the script to generate the report
-            subprocess.run(["python", "scripts/git_log_viz.py"], check=True)
+            try:
+                subprocess.run(["python", "scripts/git_log_viz.py"], check=True)
+            except subprocess.CalledProcessError as e:
+                return JsonResponse({"error": f"Script execution failed: {e}"}, status=500)
 
             # Save report metadata in the database
-            save_report(settings, "report_app/templates/report_app/report.html")
+            report_path = os.path.join("report_app", "templates", "report_app", "report.html")
+            save_report(settings_data, report_path)
 
             return redirect("report")
 
         except Exception as e:
             print("Error in generate_report():", e)
-            return JsonResponse({"error": "An error occurred while generating the report."}, status=500)
+            return JsonResponse({"error": f"An error occurred: {str(e)}"}, status=500)
 
     return JsonResponse({"error": "Invalid request method."}, status=400)
 
