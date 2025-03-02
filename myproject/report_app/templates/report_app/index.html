@@ -16,11 +16,11 @@
         {% csrf_token %}
 
         <label for="repo">Select a Repository:</label>
-        <select name="repo" id="repo">
-             {% for repo in repos %}
-                 <option value="{{ repo.path }}">{{ repo.name }}</option>
-             {% empty %}
-                  <option>No repositories available</option>
+        <select name="repo" id="repo" multiple size="5" onchange="updateRepoList()">
+            {% for repo in repos %}
+                <option value="{{ repo.path }}">{{ repo.name }}</option>
+            {% empty %}
+                <option disabled>No repositories available</option>
             {% endfor %}
         </select>
 
@@ -29,14 +29,14 @@
 
         <script>
             function updateRepoList() {
-                let inputField = document.getElementById("repo");  // Get the select element
-                let repoHidden = document.getElementById("repo_hidden");  // Get the hidden input
+                let selectElement = document.getElementById("repo");
+                let hiddenInput = document.getElementById("repo_hidden");
 
-                // Get the selected repo values
-                let selectedRepos = Array.from(inputField.selectedOptions).map(option => option.value);
+                // Get selected options
+                let selectedValues = Array.from(selectElement.selectedOptions).map(option => option.value);
 
-                // Store the selected repos as a JSON string in the hidden input field
-                repoHidden.value = JSON.stringify(selectedRepos);
+                // Store as JSON in the hidden input
+                hiddenInput.value = JSON.stringify(selectedValues);
             }
         </script>
 

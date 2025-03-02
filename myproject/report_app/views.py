@@ -9,7 +9,7 @@ from django.conf import settings  # Import settings for dynamic file paths
 
 def index(request):
     repos = Repository.objects.all()  # Fix variable name for template consistency
-    print(repos)
+    print("Repositories passed to template:", list(repos))
     return render(request, "report_app/index.html", {"repos": repos})
 
 
@@ -26,7 +26,7 @@ def generate_report(request):
     if request.method == "POST":
         try:
             # Get form data safely
-            repo_list = request.POST.get("repo", "").strip()
+            repo_list = request.POST.getlist("repo")
             repo_count = request.POST.get("repo_count", "0").strip()
             start_year = request.POST.get("start_year", "1900").strip()
             finish_year = request.POST.get("finish_year", "2024").strip()
@@ -37,12 +37,7 @@ def generate_report(request):
             num_top = request.POST.get("num_top", "10").strip()
             hour_type = request.POST.get("hour", "").strip()
 
-            # Convert repo_list safely (JSON format or comma-separated list)
-            if repo_list:
-                try:
-                    repo_list = json.loads(repo_list) if repo_list.startswith("[") else repo_list.split(",")
-                except json.JSONDecodeError:
-                    repo_list = repo_list.split(",")
+
             repo_list = [repo.strip() for repo in repo_list if repo.strip()]
 
             # Convert lists safely
