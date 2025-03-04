@@ -37,7 +37,6 @@ def generate_report(request):
             num_top = request.POST.get("num_top", "10").strip()
             hour_type = request.POST.get("hour", "").strip()
 
-
             repo_list = [repo.strip() for repo in repo_list if repo.strip()]
 
             # Convert lists safely

@@ -15,8 +15,12 @@
     <form method="POST" action="{% url 'generate_report' %}">
         {% csrf_token %}
 
-        <label for="repo">Select a Repository:</label>
-        <select name="repo" id="repo" multiple size="5" onchange="updateRepoList()">
+              <!-- Include Select2 CSS (from CDN) -->
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+
+        <!-- Dropdown for selecting multiple repositories -->
+        <label for="repo">Select Repositories:</label>
+        <select name="repo" id="repo" multiple class="form-control">
             {% for repo in repos %}
                 <option value="{{ repo.path }}">{{ repo.name }}</option>
             {% empty %}
@@ -24,20 +28,27 @@
             {% endfor %}
         </select>
 
-        <!-- Hidden input to store the JSON string of selected repos -->
+        <!-- Hidden input to store JSON string of selected repositories -->
         <input type="hidden" name="repo_list" id="repo_hidden">
 
+        <!-- Include jQuery & Select2 JS -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
         <script>
-            function updateRepoList() {
-                let selectElement = document.getElementById("repo");
-                let hiddenInput = document.getElementById("repo_hidden");
+            $(document).ready(function () {
+                // Initialize Select2 on the dropdown
+                $("#repo").select2({
+                    placeholder: "Select repositories",
+                    allowClear: true
+                });
 
-                // Get selected options
-                let selectedValues = Array.from(selectElement.selectedOptions).map(option => option.value);
-
-                // Store as JSON in the hidden input
-                hiddenInput.value = JSON.stringify(selectedValues);
-            }
+                // Update the hidden input when the selection changes
+                $("#repo").on("change", function () {
+                    let selectedValues = $(this).val() || []; // Get selected values (array)
+                    $("#repo_hidden").val(JSON.stringify(selectedValues)); // Store JSON in hidden input
+                });
+            });
         </script>
 
         <!-- Minimum Number of Repositories for Graph -->
