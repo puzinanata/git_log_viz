@@ -27,11 +27,13 @@ def find_and_save_repos(base_directory=None):
 
     print(f"Scanning directory: {base_directory}")
 
-    # Walk through all subdirectories to find Git repositories
-    for root, dirs, files in os.walk(base_directory):
-        if ".git" in dirs:  # A Git repository has a ".git" folder
-            repo_name = os.path.basename(root)
-            repo_path = os.path.abspath(root)
+    for folder in os.listdir(base_directory):
+        folder_path = os.path.join(base_directory, folder)
+        git_path = os.path.join(folder_path, ".git")
+
+        if os.path.isdir(folder_path) and os.path.isdir(git_path):  # Check if it's a Git repository
+            repo_name = folder
+            repo_path = os.path.abspath(folder_path)
 
             # Save to database if not already stored
             repository, created = Repository.objects.get_or_create(

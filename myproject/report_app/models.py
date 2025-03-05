@@ -15,6 +15,7 @@ class Repository(models.Model):
     name = models.CharField(max_length=255, unique=True)  # Repo name
     path = models.CharField(max_length=500, unique=True)  # Repo path
     created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
+    updated_at = models.DateTimeField(auto_now=True)  # Automatically updates on save
 
     def __str__(self):
         return self.name
