@@ -14,14 +14,18 @@ django.setup()
 from report_app.models import Repository
 
 
-def find_and_save_repos(base_directory="/Users/natalapuzina/Documents/git_repos"):
+def find_and_save_repos(base_directory=None):
     """Scans the given directory for Git repositories and saves them in the database."""
+    if base_directory is None:
+        base_directory = os.path.expanduser("~/Documents/git_repos")  # Expands '~' to the home directory
 
     if not os.path.exists(base_directory):
         print(f"Directory {base_directory} does not exist.")
         return
 
     repo_paths = []
+
+    print(f"Scanning directory: {base_directory}")
 
     # Walk through all subdirectories to find Git repositories
     for root, dirs, files in os.walk(base_directory):

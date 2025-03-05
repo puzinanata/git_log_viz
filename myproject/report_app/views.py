@@ -7,20 +7,55 @@ from report_app.models import Report, Repository
 from django.conf import settings  # Import settings for dynamic file paths
 
 
+def find_and_save_repos(base_directory=None):
+    """Scans the given directory for Git repositories and saves them in the database."""
+    if base_directory is None:
+        base_directory = os.path.expanduser("~/Documents/git_repos")  # Expands '~' to the home directory
+
+    if not os.path.exists(base_directory):
+        print(f"Directory {base_directory} does not exist.")
+        return
+
+    repo_paths = []
+    print(f"Scanning directory: {base_directory}")
+
+    # Walk through all subdirectories to find Git repositories
+    for root, dirs, files in os.walk(base_directory):
+        if ".git" in dirs:  # A Git repository has a ".git" folder
+            repo_name = os.path.basename(root)
+            repo_path = os.path.abspath(root)
+
+            # Save to database if not already stored
+            repository, created = Repository.objects.get_or_create(
+                name=repo_name,
+                path=repo_path
+            )
+
+            if created:
+                print(f"Added to database: {repo_name} -> {repo_path}")
+            else:
+                print(f"Already exists: {repo_name}")
+
+            repo_paths.append(repo_path)
+
+    if not repo_paths:
+        print("No repositories found.")
+
 def index(request):
-    repos = Repository.objects.all()  # Fix variable name for template consistency
+    find_and_save_repos()  # Run the function before fetching repos
+    repos = Repository.objects.all()  # Fetch repositories after updating the DB
     print("Repositories passed to template:", list(repos))
     return render(request, "report_app/index.html", {"repos": repos})
 
 
 def save_report(settings, file_path):
+    """Save report metadata to the database."""
     report = Report.objects.create(
         report_name="Git Analytics Report",
         settings_json=settings,
         file_path=file_path
     )
     return report
-
 
 def generate_report(request):
     if request.method == "POST":
