@@ -18,9 +18,9 @@
               <!-- Include Select2 CSS (from CDN) -->
         <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 
-        <!-- Dropdown for selecting multiple repositories -->
         <label for="repo">Select Repositories:</label>
-        <select name="repo" id="repo" multiple class="form-control">
+        <select name="repo" id="repo" multiple>
+            <option value="select_all">Select All</option>  <!-- Add a Select All option -->
             {% for repo in repos %}
                 <option value="{{ repo.path }}">{{ repo.name }}</option>
             {% empty %}
@@ -36,19 +36,19 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
         <script>
-            $(document).ready(function () {
-                // Initialize Select2 on the dropdown
-                $("#repo").select2({
-                    placeholder: "Select repositories",
-                    allowClear: true
-                });
+        $(document).ready(function () {
+            $('#repo').select2();  // Initialize Select2
 
-                // Update the hidden input when the selection changes
-                $("#repo").on("change", function () {
-                    let selectedValues = $(this).val() || []; // Get selected values (array)
-                    $("#repo_hidden").val(JSON.stringify(selectedValues)); // Store JSON in hidden input
-                });
+            // Handle the "Select All" functionality
+            $('#repo').on('select2:select', function (e) {
+                let selectedValues = $(this).val();
+
+                if (selectedValues.includes("select_all")) {
+                    $(this).find('option:not(:disabled)').prop('selected', true);
+                    $(this).trigger('change');  // Update Select2
+                }
             });
+        });
         </script>
 
         <!-- Minimum Number of Repositories for Graph -->
