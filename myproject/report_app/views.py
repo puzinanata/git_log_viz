@@ -4,7 +4,7 @@ import os
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from report_app.models import Report, Repository
-from django.conf import settings  # Import settings for dynamic file paths
+from django.conf import settings
 
 
 def find_and_save_repos(base_directory=None):

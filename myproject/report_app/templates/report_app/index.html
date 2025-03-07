@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Git Analytics Report Settings</title>
     {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}?v=1">
+
 </head>
 
 <body>
+    <img src="{% static 'images/cat_git.jpg' %}" alt="Git Cat" class="logo">
 
     <h2>Configure Git Analytics Report</h2>
 
@@ -52,7 +54,7 @@
         </script>
 
         <!-- Minimum Number of Repositories for Graph -->
-        <label for="repo_count">Minimum Number of Repositories for Graph:</label>
+        <label for="repo_count">Minimum Number of Repositories for Display Graph by repos:</label>
         <input type="number" name="repo_count" id="repo_count" min="1">
 
         <!-- Start Year -->
@@ -81,7 +83,7 @@
         <input type="hidden" name="old_username" id="old_hidden">
 
         <!-- New Username (for merging old ones) -->
-        <label for="new_username">New Username (to merge above into):</label>
+        <label for="new_username">New Username (to merge above into, comma-separated):</label>
         <input type="text" name="new_username" id="new_username" placeholder="e.g., user_new">
 
         <script>
