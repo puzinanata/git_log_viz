@@ -41,6 +41,7 @@ def find_and_save_repos(base_directory=None):
     if not repo_paths:
         print("No repositories found.")
 
+
 def index(request):
     find_and_save_repos()  # Run the function before fetching repos
     repos = Repository.objects.all()  # Fetch repositories after updating the DB
@@ -56,6 +57,7 @@ def save_report(settings, file_path):
         file_path=file_path
     )
     return report
+
 
 def generate_report(request):
     if request.method == "POST":
@@ -74,7 +76,6 @@ def generate_report(request):
 
             repo_list = [repo.strip() for repo in repo_list if repo.strip()]
 
-            # Convert lists safely
             def parse_list(input_str):
                 if input_str:
                     try:
