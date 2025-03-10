@@ -3,5 +3,7 @@ pandas~=2.2.1
 plotly==5.24.1
 datetime
 kaleido
-flask
 django
+json
+subprocess
+os
