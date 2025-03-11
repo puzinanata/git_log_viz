@@ -7,16 +7,16 @@ from report_app.models import Report, Repository
 from django.conf import settings
 
 
-def find_and_save_repos(base_directory=None):
-    """Scans the given directory for Git repositories and saves them in the database."""
+def find_and_sync_repos(base_directory=None):
+    """Scans the given directory for Git repositories and syncs with the database."""
     if base_directory is None:
-        base_directory = "/var/lib/git_repos"  # Corrected the path assignment
+        base_directory = "/var/lib/git_repos"
 
     if not os.path.exists(base_directory):
         print(f"Directory {base_directory} does not exist.")
         return
 
-    repo_paths = []
+    current_repo_paths = set()  # Stores repos found on the VM
     print(f"Scanning directory: {base_directory}")
 
     # Walk through all subdirectories to find Git repositories
@@ -25,26 +25,41 @@ def find_and_save_repos(base_directory=None):
             repo_name = os.path.basename(root)
             repo_path = os.path.abspath(root)
 
+            # Save repo paths found on the VM
+            current_repo_paths.add(repo_path)
+
             # Save to database if not already stored
             repository, created = Repository.objects.get_or_create(
                 name=repo_name,
-                defaults={'path': repo_path}  # Use 'defaults' to update if the name already exists
+                defaults={'path': repo_path}
             )
 
             if not created:
-                repository.path = repo_path  # Update path if the repo name exists
-                repository.save()  # Save the updated path
-                print(f"Updated repository path: {repo_name} -> {repo_path}")
+                if repository.path != repo_path:
+                    repository.path = repo_path  # Update path if different
+                    repository.save()
+                    print(f"Updated repository path: {repo_name} -> {repo_path}")
+                else:
+                    print(f"Already exists: {repo_name}")
             else:
                 print(f"Added to database: {repo_name} -> {repo_path}")
 
-            repo_paths.append(repo_path)
+    # Remove outdated repositories that are not found on the VM
+    for repo in Repository.objects.all():
+        if repo.path not in current_repo_paths:
+            print(f"Removing outdated repo from database: {repo.name}")
+            repo.delete()
 
-    if not repo_paths:
+    if not current_repo_paths:
         print("No repositories found.")
 
+
+if __name__ == "__main__":
+    find_and_sync_repos()
+
+
 def index(request):
-    find_and_save_repos()  # Run the function before fetching repos
+    find_and_sync_repos()  # Run the function before fetching repos
     repos = Repository.objects.all()  # Fetch repositories after updating the DB
     print("Repositories passed to template:", list(repos))
     return render(request, "report_app/index.html", {"repos": repos})
