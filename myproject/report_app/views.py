@@ -10,7 +10,7 @@ from django.conf import settings
 def find_and_save_repos(base_directory=None):
     """Scans the given directory for Git repositories and saves them in the database."""
     if base_directory is None:
-        base_directory = os.path.expanduser("~/Documents/git_repos")  # Expands '~' to the home directory
+        base_directory = "/var/lib/git_repos"  # Corrected the path assignment
 
     if not os.path.exists(base_directory):
         print(f"Directory {base_directory} does not exist.")
@@ -28,19 +28,20 @@ def find_and_save_repos(base_directory=None):
             # Save to database if not already stored
             repository, created = Repository.objects.get_or_create(
                 name=repo_name,
-                path=repo_path
+                defaults={'path': repo_path}  # Use 'defaults' to update if the name already exists
             )
 
-            if created:
-                print(f"Added to database: {repo_name} -> {repo_path}")
+            if not created:
+                repository.path = repo_path  # Update path if the repo name exists
+                repository.save()  # Save the updated path
+                print(f"Updated repository path: {repo_name} -> {repo_path}")
             else:
-                print(f"Already exists: {repo_name}")
+                print(f"Added to database: {repo_name} -> {repo_path}")
 
             repo_paths.append(repo_path)
 
     if not repo_paths:
         print("No repositories found.")
-
 
 def index(request):
     find_and_save_repos()  # Run the function before fetching repos
