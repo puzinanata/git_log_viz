@@ -128,7 +128,7 @@ def generate_report(request):
 
             # Run the script to generate the report
             try:
-                subprocess.run(["python", "scripts/git_log_viz.py"], check=True)
+                subprocess.run(["python3", "scripts/git_log_viz.py"], check=True)
             except subprocess.CalledProcessError as e:
                 return JsonResponse({"error": f"Script execution failed: {e}"}, status=500)
 
