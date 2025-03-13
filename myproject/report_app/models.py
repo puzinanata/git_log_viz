@@ -14,6 +14,7 @@ class Report(models.Model):
 class Repository(models.Model):
     name = models.CharField(max_length=255, unique=True)  # Repo name
     path = models.CharField(max_length=500, unique=True)  # Repo path
+    url = models.CharField(max_length=500, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     updated_at = models.DateTimeField(auto_now=True)  # Automatically updates on save
 

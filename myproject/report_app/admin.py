@@ -12,7 +12,7 @@ class ReportAdmin(admin.ModelAdmin):
 
 @admin.register(Repository)
 class ReportAdmin(admin.ModelAdmin):
-    list_display = ("name", "created_at", "updated_at")  # Show in list view
+    list_display = ("name", "path", "url","created_at", "updated_at")  # Show in list view
     list_filter = ("created_at", "updated_at")  # Filters for easier navigation
     ordering = ("-updated_at",)  # Sort by most recently updated
     readonly_fields = ("created_at", "updated_at")  # Prevent manual edits

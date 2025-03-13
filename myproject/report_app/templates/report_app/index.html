@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,8 @@
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}?v=1">
 
+    <!-- Include Select2 CSS (from CDN) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 </head>
 
 <body>
@@ -14,11 +17,17 @@
 
     <h2>Configure Git Analytics Report</h2>
 
+    <!-- Form for Adding Repositories -->
+    <form id="add-repo-form">
+        <input type="text" id="repo-urls" name="repo_urls" placeholder="Enter Git repo URLs, separated by commas" style="width: 70%;">
+        <button type="submit">Add Repositories</button>
+    </form>
+
+    <p id="repo-status"></p>  <!-- Status message -->
+
+    <!-- Form for Report Generation -->
     <form method="POST" action="{% url 'generate_report' %}">
         {% csrf_token %}
-
-              <!-- Include Select2 CSS (from CDN) -->
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 
         <label for="repo">Select Repositories:</label>
         <select name="repo" id="repo" multiple>
@@ -30,23 +39,89 @@
             {% endfor %}
         </select>
 
-        <!-- Hidden input to store JSON string of selected repositories -->
         <input type="hidden" name="repo_list" id="repo_hidden">
 
-        <!-- Include jQuery & Select2 JS -->
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+        <label for="repo_count">Minimum Number of Repositories for Display Graph by repos:</label>
+        <input type="number" name="repo_count" id="repo_count" min="1">
 
-        <script>
+        <label for="start_year">Start Year:</label>
+        <input type="number" name="start_year" id="start_year">
+
+        <label for="finish_year">Finish Year:</label>
+        <input type="number" name="finish_year" id="finish_year">
+
+        <label for="author">Choose Author Type:</label>
+        <select name="author" id="author">
+            <option value="username">Username</option>
+            <option value="email">Email</option>
+        </select>
+
+        <label for="exclude_username">Exclude Usernames (comma-separated):</label>
+        <input type="text" id="exclude_username" placeholder="e.g., user1,user2" oninput="updateUserList('exclude_username', 'exclude_hidden')">
+        <input type="hidden" name="exclude_username" id="exclude_hidden">
+
+        <label for="old_username">Old Usernames (comma-separated):</label>
+        <input type="text" id="old_username" placeholder="e.g., user_old1,user_old2" oninput="updateUserList('old_username', 'old_hidden')">
+        <input type="hidden" name="old_username" id="old_hidden">
+
+        <label for="new_username">New Username (to merge above into, comma-separated):</label>
+        <input type="text" name="new_username" id="new_username" placeholder="e.g., user_new">
+
+        <label for="num_top">Number of Top Authors:</label>
+        <input type="number" name="num_top" id="num_top">
+
+        <label for="hour">Choose Hour Format:</label>
+        <select name="hour" id="hour">
+            <option value="hour">Local Hour</option>
+            <option value="utc_hour">UTC Hour</option>
+        </select>
+
+        <button type="submit">Generate Report</button>
+    </form>
+
+    <!-- Include jQuery & Select2 JS (from CDN) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+    <script>
         $(document).ready(function () {
-            $('#repo').select2();  // Initialize Select2
+
+            // Handle form submission to add repositories
+            $('#add-repo-form').on('submit', function (e) {
+                e.preventDefault();
+
+                let repoUrls = $('#repo-urls').val().trim();
+                if (!repoUrls) {
+                    alert("Please enter at least one repository URL.");
+                    return;
+                }
+
+                console.log('URLs to send:', repoUrls);  // Log the URLs to confirm data
+
+                $.ajax({
+                    url: "{% url 'add_repo' %}",
+                    type: "POST",
+                    data: {
+                        repo_urls: repoUrls,  // Sending repo URLs
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function (response) {
+                        $('#repo-status').text("Repositories added successfully!");
+                        location.reload();  // Refresh page to show new repos
+                    },
+                    error: function (xhr) {
+                        $('#repo-status').text("Error: " + xhr.responseJSON.error);
+                    }
+                });
+            });
+
+            // Initialize Select2 for the repository dropdown
+            $('#repo').select2();
 
             // Handle the "Select All" functionality
             $('#repo').on('select2:select', function (e) {
                 let selectedValues = $(this).val();
-
                 if (selectedValues.includes("select_all")) {
-                    // Select all repositories EXCEPT "select_all"
                     $(this).find('option:not(:disabled)').prop('selected', true);
                     $(this).find('option[value="select_all"]').prop('selected', false);
                     $(this).trigger('change');  // Update Select2
@@ -60,68 +135,20 @@
                 $('#repo').val(selectedValues);  // Update the selection before sending
             });
         });
-        </script>
 
-        <!-- Minimum Number of Repositories for Graph -->
-        <label for="repo_count">Minimum Number of Repositories for Display Graph by repos:</label>
-        <input type="number" name="repo_count" id="repo_count" min="1">
+        // Update hidden input with JSON string of user list
+        function updateUserList(inputId, hiddenInputId) {
+            let inputField = document.getElementById(inputId);
+            let hiddenField = document.getElementById(hiddenInputId);
 
-        <!-- Start Year -->
-        <label for="start_year">Start Year:</label>
-        <input type="number" name="start_year" id="start_year">
+            let userList = inputField.value
+                .split(',')
+                .map(user => user.trim())  // Remove spaces
+                .filter(user => user !== ""); // Remove empty entries
 
-        <!-- Finish Year -->
-        <label for="finish_year">Finish Year:</label>
-        <input type="number" name="finish_year" id="finish_year">
-
-        <!-- Author Selection -->
-        <label for="author">Choose Author Type:</label>
-        <select name="author" id="author">
-            <option value="username">Username</option>
-            <option value="email">Email</option>
-        </select>
-
-                <!-- Exclude Specific Users -->
-        <label for="exclude_username">Exclude Usernames (comma-separated):</label>
-        <input type="text" id="exclude_username" placeholder="e.g., user1,user2" oninput="updateUserList('exclude_username', 'exclude_hidden')">
-        <input type="hidden" name="exclude_username" id="exclude_hidden">
-
-        <!-- Combine Old Usernames -->
-        <label for="old_username">Old Usernames (comma-separated):</label>
-        <input type="text" id="old_username" placeholder="e.g., user_old1,user_old2" oninput="updateUserList('old_username', 'old_hidden')">
-        <input type="hidden" name="old_username" id="old_hidden">
-
-        <!-- New Username (for merging old ones) -->
-        <label for="new_username">New Username (to merge above into, comma-separated):</label>
-        <input type="text" name="new_username" id="new_username" placeholder="e.g., user_new">
-
-        <script>
-            function updateUserList(inputId, hiddenInputId) {
-                let inputField = document.getElementById(inputId);
-                let hiddenField = document.getElementById(hiddenInputId);
-
-                let userList = inputField.value
-                    .split(',')
-                    .map(user => user.trim())  // Remove spaces
-                    .filter(user => user !== ""); // Remove empty entries
-
-                hiddenField.value = JSON.stringify(userList);
-            }
-        </script>
-
-        <!-- Number of Top Authors -->
-        <label for="num_top">Number of Top Authors:</label>
-        <input type="number" name="num_top" id="num_top">
-
-        <!-- Time Format -->
-        <label for="hour">Choose Hour Format:</label>
-        <select name="hour" id="hour">
-            <option value="hour">Local Hour</option>
-            <option value="utc_hour">UTC Hour</option>
-        </select>
-
-        <button type="submit">Generate Report</button>
-    </form>
-
+            hiddenField.value = JSON.stringify(userList);
+        }
+    </script>
 </body>
+
 </html>

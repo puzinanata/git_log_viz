@@ -3,20 +3,84 @@ import subprocess
 import os
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from report_app.models import Report, Repository
+from .models import Report
+from .models import Repository
 from django.conf import settings
+import logging
 
 
-def find_and_sync_repos(base_directory=None):
+logger = logging.getLogger(__name__)
+
+def add_repo(request, base_directory="/var/lib/git_repos"):
+    """Adds repositories to the database from a list of URLs and ensures they are synced."""
+    repo_urls = request.POST.get("repo_urls", "").split(",")
+    repo_urls = [url.strip() for url in repo_urls if url.strip()]  # Remove empty values
+
+    logger.debug(f"Received repo URLs: {repo_urls}")  # Log the URLs received
+
+    if not repo_urls:
+        return JsonResponse({"error": "No repositories provided."}, status=400)
+
+    # Ensure the base directory exists and is writable
+    os.makedirs(base_directory, exist_ok=True)
+    if not os.access(base_directory, os.W_OK):
+        return JsonResponse({"error": f"Permission denied: {base_directory}"}, status=500)
+
+    added_repos, error_repos = [], []
+
+    for url in repo_urls:
+        repo_name = os.path.basename(url).replace(".git", "")
+        repo_path = os.path.join(base_directory, repo_name)
+
+        # Check if repository already exists
+        repo_exists_in_db = Repository.objects.filter(name=repo_name).exists()
+        repo_exists_in_fs = os.path.isdir(repo_path) and os.path.exists(os.path.join(repo_path, ".git"))
+
+        if repo_exists_in_db and repo_exists_in_fs:
+            logger.debug(f"Repo already exists in DB & filesystem: {repo_name}")
+            error_repos.append(url)
+            continue
+
+        try:
+            # Clone the repository
+            result = subprocess.run(
+                f"cd {base_directory}; git clone {url} 2>&1",
+                shell=True, capture_output=True, text=True
+            )
+            logger.debug(f"Git clone output for {repo_name}: {result.stdout}")
+            if result.stderr:
+                logger.error(f"Git clone warning/errors: {result.stderr}")
+
+            # Ensure the repository was cloned successfully
+            if not os.path.isdir(repo_path) or not os.path.exists(os.path.join(repo_path, ".git")):
+                raise RuntimeError(f"Git clone failed: {repo_path} does not exist after cloning.")
+
+            # Add to database
+            repo, created = Repository.objects.update_or_create(
+                name=repo_name,
+                defaults={'path': repo_path, 'url': url}
+            )
+            if created:
+                logger.debug(f"Added new repository: {repo_name}")
+            else:
+                logger.debug(f"Updated existing repository: {repo_name}")
+
+            added_repos.append(url)
+
+        except Exception as e:
+            error_repos.append(url)
+            logger.error(f"Error while processing {url}: {str(e)}")
+
+    return JsonResponse({"added": added_repos, "errors": error_repos})
+
+
+def find_and_sync_repos(base_directory="/var/lib/git_repos"):
     """Scans the given directory for Git repositories and syncs with the database."""
-    if base_directory is None:
-        base_directory = "/var/lib/git_repos"
-
     if not os.path.exists(base_directory):
         print(f"Directory {base_directory} does not exist.")
         return
 
-    current_repo_paths = set()  # Stores repos found on the VM
+    current_repo_paths = set()  # Stores repos found in the VM
     print(f"Scanning directory: {base_directory}")
 
     # Walk through all subdirectories to find Git repositories
@@ -28,7 +92,7 @@ def find_and_sync_repos(base_directory=None):
             # Save repo paths found on the VM
             current_repo_paths.add(repo_path)
 
-            # Save to database if not already stored
+            # Check if repository is already in DB
             repository, created = Repository.objects.get_or_create(
                 name=repo_name,
                 defaults={'path': repo_path}
@@ -44,7 +108,7 @@ def find_and_sync_repos(base_directory=None):
             else:
                 print(f"Added to database: {repo_name} -> {repo_path}")
 
-    # Remove outdated repositories that are not found on the VM
+    # Remove outdated repositories from the database
     for repo in Repository.objects.all():
         if repo.path not in current_repo_paths:
             print(f"Removing outdated repo from database: {repo.name}")
@@ -55,7 +119,7 @@ def find_and_sync_repos(base_directory=None):
 
 
 def index(request):
-    find_and_sync_repos()  # Run the function before fetching repos
+    find_and_sync_repos()
     repos = Repository.objects.all()  # Fetch repositories after updating the DB
     print("Repositories passed to template:", list(repos))
     return render(request, "report_app/index.html", {"repos": repos})
