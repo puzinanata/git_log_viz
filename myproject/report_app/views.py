@@ -54,10 +54,6 @@ def find_and_sync_repos(base_directory=None):
         print("No repositories found.")
 
 
-if __name__ == "__main__":
-    find_and_sync_repos()
-
-
 def index(request):
     find_and_sync_repos()  # Run the function before fetching repos
     repos = Repository.objects.all()  # Fetch repositories after updating the DB

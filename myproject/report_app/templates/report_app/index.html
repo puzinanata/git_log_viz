@@ -46,9 +46,18 @@
                 let selectedValues = $(this).val();
 
                 if (selectedValues.includes("select_all")) {
+                    // Select all repositories EXCEPT "select_all"
                     $(this).find('option:not(:disabled)').prop('selected', true);
+                    $(this).find('option[value="select_all"]').prop('selected', false);
                     $(this).trigger('change');  // Update Select2
                 }
+            });
+
+            // Handle form submission to exclude "select_all"
+            $('form').on('submit', function () {
+                let selectedValues = $('#repo').val() || [];
+                selectedValues = selectedValues.filter(value => value !== "select_all");  // Remove "select_all"
+                $('#repo').val(selectedValues);  // Update the selection before sending
             });
         });
         </script>
