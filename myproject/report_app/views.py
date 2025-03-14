@@ -140,9 +140,9 @@ def generate_report(request):
         try:
             # Get form data safely
             repo_list = request.POST.getlist("repo")
-            repo_count = request.POST.get("repo_count", "0").strip()
+            repo_count = request.POST.get("repo_count", "1").strip()
             start_year = request.POST.get("start_year", "1900").strip()
-            finish_year = request.POST.get("finish_year", "2024").strip()
+            finish_year = request.POST.get("finish_year", "2025").strip()
             author_type = request.POST.get("author", "").strip()
             excl_list = request.POST.get("exclude_username", "").strip()
             old_list = request.POST.get("old_username", "").strip()
@@ -173,9 +173,9 @@ def generate_report(request):
                 except ValueError:
                     return default
 
-            repo_count = safe_int(repo_count, 0)
+            repo_count = safe_int(repo_count, 1)
             start_year = safe_int(start_year, 1900)
-            finish_year = safe_int(finish_year, 2024)
+            finish_year = safe_int(finish_year, 2025)
             num_top = safe_int(num_top, 10)
 
             # Create settings dictionary
