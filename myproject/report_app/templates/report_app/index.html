@@ -95,6 +95,12 @@
                     alert("Please enter at least one repository URL.");
                     return;
                 }
+                // Disable button and show "Processing..." message
+                let $button = $('button[type="submit"]');
+                let $status = $('#repo-status');
+
+                $button.prop('disabled', true).text("Adding...");
+                $status.text("Processing... Please wait.").css("color", "blue");
 
                 console.log('URLs to send:', repoUrls);  // Log the URLs to confirm data
 
@@ -106,15 +112,20 @@
                         csrfmiddlewaretoken: '{{ csrf_token }}'
                     },
                     success: function (response) {
-                        $('#repo-status').text("Repositories added successfully!");
+                        $('#repo-status').text("Repositories added successfully!").css("color", "green");
+                        $('#repo-urls').val("");  // Clear input field
                         location.reload();  // Refresh page to show new repos
                     },
                     error: function (xhr) {
                         $('#repo-status').text("Error: " + xhr.responseJSON.error);
+                        $status.text("Error: " + errorMessage).css("color", "red");
+                    },
+                    complete: function () {
+                        // Re-enable button and reset text
+                        $button.prop('disabled', false).text("Add Repositories");
                     }
                 });
             });
-
             // Initialize Select2 for the repository dropdown
             $('#repo').select2();
 

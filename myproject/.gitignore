@@ -4,4 +4,5 @@ git_repos/*
 notes
 myproject/result/*
 myproject/report_app/templates/report_app/report.html
+myproject/db.sqlite3
 
