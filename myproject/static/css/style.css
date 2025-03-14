@@ -12,8 +12,8 @@ body {
     position: absolute;
     top: 2px;
     left: 20px;
-    width: 10%; /* Adjust as needed */
-    max-width: 80px; /* Ensures it doesn't get too large */
+    width: 10vw; /* Viewport-based width */
+    max-width: 80px;
     height: auto;
 }
 
