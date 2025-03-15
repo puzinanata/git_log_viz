@@ -160,6 +160,16 @@
             hiddenField.value = JSON.stringify(userList);
         }
     </script>
+
+    <script>
+        $(document).ready(function () {
+            // Handle report generation form submission
+            $('form').on('submit', function () {
+                let $submitButton = $(this).find('button[type="submit"]');
+                $submitButton.prop('disabled', true).text("Generating...");
+            });
+        });
+    </script>
 </body>
 
 </html>
