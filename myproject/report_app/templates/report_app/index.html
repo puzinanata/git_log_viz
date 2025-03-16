@@ -96,10 +96,10 @@
                     return;
                 }
                 // Disable button and show "Processing..." message
-                let $button = $('button[type="submit"]');
+                let $addButton = $(this).find('button[type="submit"]'); // Target only "Add Repositories" button
                 let $status = $('#repo-status');
 
-                $button.prop('disabled', true).text("Adding...");
+                $addButton.prop('disabled', true).text("Adding...");
                 $status.text("Processing... Please wait.").css("color", "blue");
 
                 console.log('URLs to send:', repoUrls);  // Log the URLs to confirm data
@@ -126,6 +126,7 @@
                     }
                 });
             });
+
             // Initialize Select2 for the repository dropdown
             $('#repo').select2();
 
@@ -164,9 +165,10 @@
     <script>
         $(document).ready(function () {
             // Handle report generation form submission
-            $('form').on('submit', function () {
+            $('form[action="{% url 'generate_report' %}"]').on('submit', function () {
                 let $submitButton = $(this).find('button[type="submit"]');
                 $submitButton.prop('disabled', true).text("Generating...");
+                $('#repo-status').text("Generating report... Please wait.").css("color", "blue");
             });
         });
     </script>
