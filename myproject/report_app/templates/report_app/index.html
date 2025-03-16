@@ -40,43 +40,50 @@
         </select>
 
         <input type="hidden" name="repo_list" id="repo_hidden">
+        <!-- Button to toggle visibility -->
+        <!-- Toggle Button with Downward Arrow -->
+        <button type="button" id="toggle-fields">Show more ▼</button>
 
-        <label for="repo_count">Minimum Number of Repositories for Display Graph by repos:</label>
-        <input type="number" name="repo_count" id="repo_count" value="{{ request.POST.repo_count|default:'1' }}" required>
+        <!-- Wrapping all hidden fields in a div -->
+        <div id="hidden-fields" style="display: none;">
+            <label for="repo_count">Minimum Number of Repositories for Display Graph by repos:</label>
+            <input type="number" name="repo_count" id="repo_count" value="{{ request.POST.repo_count|default:'1' }}" required>
 
-        <label for="start_year">Start Year:</label>
-        <input type="number" name="start_year" id="start_year" value="{{ request.POST.start_year|default:'1900' }}" required>
+            <label for="start_year">Start Year:</label>
+            <input type="number" name="start_year" id="start_year" value="{{ request.POST.start_year|default:'1900' }}" required>
 
-        <label for="finish_year">Finish Year:</label>
-        <input type="number" name="finish_year" id="finish_year" value="{{ request.POST.finish_year|default:'2025' }}" required>
+            <label for="finish_year">Finish Year:</label>
+            <input type="number" name="finish_year" id="finish_year" value="{{ request.POST.finish_year|default:'2025' }}" required>
 
-        <label for="author">Choose Author Type:</label>
-        <select name="author" id="author" >
-            <option value="username">Username</option>
-            <option value="email">Email</option>
-        </select>
+            <label for="author">Choose Author Type:</label>
+            <select name="author" id="author">
+                <option value="username">Username</option>
+                <option value="email">Email</option>
+            </select>
 
-        <label for="exclude_username">Exclude Usernames (comma-separated):</label>
-        <input type="text" id="exclude_username" placeholder="e.g., user1,user2" oninput="updateUserList('exclude_username', 'exclude_hidden')">
-        <input type="hidden" name="exclude_username" id="exclude_hidden">
+            <label for="exclude_username">Exclude Usernames (comma-separated):</label>
+            <input type="text" id="exclude_username" placeholder="e.g., user1,user2" oninput="updateUserList('exclude_username', 'exclude_hidden')">
+            <input type="hidden" name="exclude_username" id="exclude_hidden">
 
-        <label for="old_username">Old Usernames (comma-separated):</label>
-        <input type="text" id="old_username" placeholder="e.g., user_old1,user_old2" oninput="updateUserList('old_username', 'old_hidden')">
-        <input type="hidden" name="old_username" id="old_hidden">
+            <label for="old_username">Old Usernames (comma-separated):</label>
+            <input type="text" id="old_username" placeholder="e.g., user_old1,user_old2" oninput="updateUserList('old_username', 'old_hidden')">
+            <input type="hidden" name="old_username" id="old_hidden">
 
-        <label for="new_username">New Username (to merge above into, comma-separated):</label>
-        <input type="text" name="new_username" id="new_username" placeholder="e.g., user_new">
+            <label for="new_username">New Username (to merge above into, comma-separated):</label>
+            <input type="text" name="new_username" id="new_username" placeholder="e.g., user_new">
 
-        <label for="num_top">Number of Top Authors:</label>
-        <input type="number" name="num_top" id="num_top" value="{{ request.POST.num_top|default:'10' }}" required>
+            <label for="num_top">Number of Top Authors:</label>
+            <input type="number" name="num_top" id="num_top" value="{{ request.POST.num_top|default:'10' }}" required>
 
-        <label for="hour">Choose Hour Format:</label>
-        <select name="hour" id="hour">
-            <option value="hour">Local Hour</option>
-            <option value="utc_hour">UTC Hour</option>
-        </select>
+            <label for="hour">Choose Hour Format:</label>
+            <select name="hour" id="hour">
+                <option value="hour">Local Hour</option>
+                <option value="utc_hour">UTC Hour</option>
+            </select>
+        </div>
 
         <button type="submit">Generate Report</button>
+
     </form>
 
     <!-- Include jQuery & Select2 JS (from CDN) -->
@@ -169,6 +176,21 @@
                 let $submitButton = $(this).find('button[type="submit"]');
                 $submitButton.prop('disabled', true).text("Generating...");
                 $('#repo-status').text("Generating report... Please wait.");
+            });
+        });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $('#toggle-fields').on('click', function () {
+                let $fields = $('#hidden-fields');
+                if ($fields.is(':visible')) {
+                    $fields.hide();
+                    $(this).text('Show more ▼'); // Downward arrow
+                } else {
+                    $fields.show();
+                    $(this).text('Hide ▲'); // Upward arrow
+                }
             });
         });
     </script>
