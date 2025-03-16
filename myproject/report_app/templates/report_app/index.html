@@ -19,7 +19,7 @@
 
     <!-- Form for Adding Repositories -->
     <form id="add-repo-form">
-        <input type="text" id="repo-urls" name="repo_urls" placeholder="Enter Git repo URLs, separated by commas. E.g. https://github.com/username/repo" style="width: 100%;">
+        <input type="text" id="repo-urls" name="repo_urls" placeholder="Enter Git repo URLs, separated by commas. E.g. https://github.com/username/repo">
         <button type="submit">Add Repositories</button>
     </form>
 
@@ -100,7 +100,7 @@
                 let $status = $('#repo-status');
 
                 $addButton.prop('disabled', true).text("Adding...");
-                $status.text("Processing... Please wait.").css("color", "blue");
+                $status.text("Processing... Please wait.");
 
                 console.log('URLs to send:', repoUrls);  // Log the URLs to confirm data
 
@@ -112,13 +112,13 @@
                         csrfmiddlewaretoken: '{{ csrf_token }}'
                     },
                     success: function (response) {
-                        $('#repo-status').text("Repositories added successfully!").css("color", "green");
+                        $('#repo-status').text("Repositories added successfully!");
                         $('#repo-urls').val("");  // Clear input field
                         location.reload();  // Refresh page to show new repos
                     },
                     error: function (xhr) {
                         $('#repo-status').text("Error: " + xhr.responseJSON.error);
-                        $status.text("Error: " + errorMessage).css("color", "red");
+                        $status.text("Error: " + errorMessage);
                     },
                     complete: function () {
                         // Re-enable button and reset text
@@ -168,7 +168,7 @@
             $('form[action="{% url 'generate_report' %}"]').on('submit', function () {
                 let $submitButton = $(this).find('button[type="submit"]');
                 $submitButton.prop('disabled', true).text("Generating...");
-                $('#repo-status').text("Generating report... Please wait.").css("color", "blue");
+                $('#repo-status').text("Generating report... Please wait.");
             });
         });
     </script>
