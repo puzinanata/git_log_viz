@@ -249,12 +249,12 @@ def update_vm(request):
 
     message1 = f"Last commit in {my_repo_name} before pulling: {last_commit_before_pull}"
 
-    # Run sudo git pull (suppress output)
     subprocess.run(
         f'cd {my_repo_path}; {command_pull}',
         shell=True,
-        text=True
-    )
+        text=True,
+        capture_output=True
+    ).stdout.strip()
 
     last_commit_after_pull = subprocess.run(
         f'cd {my_repo_path}; {command_last_commit}',
@@ -276,5 +276,5 @@ def update_vm(request):
         "message1": message1,
         "message2": message2,
         "message3": message3,
-        "message44": message4,
+        "message4": message4,
     })
