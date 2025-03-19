@@ -240,13 +240,6 @@ def update_vm(request):
 
     my_repo_name = my_repo_path.split('/')[-1]
 
-    debug2 = subprocess.run(
-        f'echo cd {my_repo_path}; {command_last_commit}',
-        shell=True,
-        text=True,
-        capture_output=True
-    ).stdout.strip()
-
     last_commit_before_pull = subprocess.run(
         f'cd {my_repo_path}; {command_last_commit}',
         shell=True,
@@ -283,7 +276,5 @@ def update_vm(request):
         "message1": message1,
         "message2": message2,
         "message3": message3,
-        "message4": message4,
-        "message5": my_repo_path,
-        "message6": debug2,
+        "message44": message4,
     })
