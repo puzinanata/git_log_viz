@@ -224,46 +224,66 @@ def report(request):
     return render(request, "report_app/report.html")
 
 
-def hello_world(request):
-    import subprocess
-
+def update_vm(request):
     # Command to extract data from git log
     command_last_commit = "git log -1 --pretty=format:'%H' --no-merges"
 
     # Command to update local git repo
     command_pull = "git pull &> /dev/null"
 
-    my_repo_path = "~/git_log_viz/myproject"
-    my_repo_name = my_repo_path.split('/')[-1]
-
-    last_commit_before_pull = subprocess.run(
-        f"sudo bash -c 'cd {my_repo_path}; {command_last_commit}'",
+    my_repo_path = subprocess.run(
+        'pwd',
         shell=True,
         text=True,
         capture_output=True
     ).stdout.strip()
 
-    print(f"Last commit in {my_repo_name} before pulling:", last_commit_before_pull, flush=True)
+    my_repo_name = my_repo_path.split('/')[-1]
+
+    debug2 = subprocess.run(
+        f'echo cd {my_repo_path}; {command_last_commit}',
+        shell=True,
+        text=True,
+        capture_output=True
+    ).stdout.strip()
+
+    last_commit_before_pull = subprocess.run(
+        f'cd {my_repo_path}; {command_last_commit}',
+        shell=True,
+        text=True,
+        capture_output=True
+    ).stdout.strip()
+
+    message1 = f"Last commit in {my_repo_name} before pulling: {last_commit_before_pull}"
 
     # Run sudo git pull (suppress output)
     subprocess.run(
-        f"sudo bash -c 'cd {my_repo_path}; {command_pull}'",
+        f'cd {my_repo_path}; {command_pull}',
         shell=True,
         text=True
     )
 
     last_commit_after_pull = subprocess.run(
-        f"sudo bash -c 'cd {my_repo_path}; {command_last_commit}'",
+        f'cd {my_repo_path}; {command_last_commit}',
         shell=True,
         text=True,
         capture_output=True
     ).stdout.strip()
 
-    print(f"Last commit in {my_repo_name} after pulling:", last_commit_after_pull, flush=True)
+    message2 = f"Last commit in {my_repo_name} after pulling: {last_commit_after_pull}"
 
+    message3 = ""
+    message4 = ""
     if last_commit_after_pull != last_commit_before_pull:
-        print(f"repo {my_repo_name} updated", flush=True)
+        message3 = f"repo {my_repo_name} updated"
     else:
-        print(f"no changes in repo {my_repo_name}, so it didn't update", flush=True)
+        message4 = f"no changes in repo {my_repo_name}, so it didn't update"
 
-    return JsonResponse({"message": "Hello, World!"})
+    return JsonResponse({
+        "message1": message1,
+        "message2": message2,
+        "message3": message3,
+        "message4": message4,
+        "message5": my_repo_path,
+        "message6": debug2,
+    })
