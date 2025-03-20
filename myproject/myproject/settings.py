@@ -53,6 +53,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "myproject.urls"
 
+CSRF_TRUSTED_ORIGINS = ['https://gitreport.duckdns.org']
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
