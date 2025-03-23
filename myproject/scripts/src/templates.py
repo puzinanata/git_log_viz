@@ -140,20 +140,3 @@ table_js_template = """
 {}
 """.format(graph_js_template)
 
-image_template = """
-<img src="{path}" style="max-width: 100%; height: auto;">
-"""
-
-image_double_template = """
-<div style="display: flex; justify-content: space-between; gap: 20px;">
-    <img src="{path1}" style="max-width: 48%; height: auto;">
-    <img src="{path2}" style="max-width: 48%; height: auto;">
-</div>
-"""
-
-table_image_template = """
-    <p style="text-align: center; font-size: 18px; font-family: Arial, sans-serif; margin: 30px 0; color:#444">
-        Top Authors
-    </p>
-{}
-""".format(image_template)
