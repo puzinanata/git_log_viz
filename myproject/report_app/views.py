@@ -202,10 +202,9 @@ def generate_report(request):
                 json.dump(settings_data, f, indent=4)
 
             # Run the script to generate the report
-            try:
-                subprocess.run(["python3", "scripts/git_log_viz.py"], check=True)
-            except subprocess.CalledProcessError as e:
-                return JsonResponse({"error": f"Script execution failed: {e}"}, status=500)
+            import sys
+            sys.path.append(os.path.join(os.path.dirname(__file__), "./../"))
+            from scripts import git_log_viz
 
             # Save report metadata in the database
             report_path = os.path.join("report_app", "templates", "report_app", "report.html")

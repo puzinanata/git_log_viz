@@ -1,5 +1,6 @@
 import json
-import os
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), "./"))
 from src import templates
 from src import graph
 from src import prep_data
@@ -12,9 +13,6 @@ try:
 except Exception as e:
     print("Error loading settings.json:", e)
     exit(1)
-
-# Expand $HOME in repo paths
-expanded_repos = [os.path.expandvars(repo) for repo in settings["repo_name"]]
 
 # Generate repo_log_csv dynamically
 repo_log_csv = ["result/git_log_{}.csv".format(repo.split('/')[-1]) for repo in settings["repo_name"]]
@@ -55,7 +53,6 @@ df, last_year_df = prep_data.process_data(
 # Building line chart with total commits by year.
 fig1_json = graph.graph_line(
     df,
-    "result/fig1.png",
     "year",
     "Count of commits by Year",
     '1'
@@ -64,7 +61,6 @@ fig1_json = graph.graph_line(
 # Building line chart with total commits in last year.
 fig4_json = graph.graph_line(
     last_year_df,
-    "result/fig4.png",
     "month_year",
     "Count of commits in last year",
     'M1'
@@ -73,7 +69,6 @@ fig4_json = graph.graph_line(
 # Building graph table with top authors by count the commits for all years
 fig2_json = graph.graph_table(
     df,
-    "result/fig2.png",
     'year',
     settings["author"],
     settings["num_top"],
@@ -84,7 +79,6 @@ fig2_json = graph.graph_table(
 # Building graph table with top authors by count the commits in last year
 fig5_json = graph.graph_table(
     last_year_df,
-    "result/fig5.png",
     'month_year',
     settings["author"],
     settings["num_top"],
@@ -95,7 +89,6 @@ fig5_json = graph.graph_table(
 # Building graph table with top authors by sum of changes for all years
 fig7_json = graph.graph_table(
     df,
-    "result/fig7.png",
     'year',
     settings["author"],
     settings["num_top"],
@@ -106,7 +99,6 @@ fig7_json = graph.graph_table(
 # Building graph table with top authors by sum of changes for last year
 fig8_json = graph.graph_table(
     last_year_df,
-    "result/fig8.png",
     'month_year',
     settings["author"],
     settings["num_top"],
@@ -117,7 +109,6 @@ fig8_json = graph.graph_table(
 # Building bar&line chart by number of authors and commits by year
 fig13_json = graph.graph_bar_line(
     df,
-    "result/fig13.png",
     'year',
     "Number of Authors and Total Commits by Year",
     '1'
@@ -126,7 +117,6 @@ fig13_json = graph.graph_bar_line(
 # Building bar&line chart by number of authors and commits in last year
 fig14_json = graph.graph_bar_line(
     last_year_df,
-    "result/fig14.png",
     'month_year',
     "Number of Authors and Total Commits in Last Year",
     'M1'
@@ -135,7 +125,6 @@ fig14_json = graph.graph_bar_line(
 # Building pie chart by commit share of top authors for all years
 fig2a_json = graph.graph_pie(
     df,
-    "result/fig2a.png",
     'year',
     "Commit Count",
     settings["author"],
@@ -147,7 +136,6 @@ fig2a_json = graph.graph_pie(
 # Building pie chart by changes share of top authors for all years
 fig7b_json = graph.graph_pie(
     df,
-    "result/fig7b.png",
     'year',
     "Share of Changes",
     settings["author"],
@@ -159,7 +147,6 @@ fig7b_json = graph.graph_pie(
 # Building pie chart by commit share of top authors in last year
 fig5a_json = graph.graph_pie(
     last_year_df,
-    "result/fig5a.png",
     'month_year',
     "Commit Count",
     settings["author"],
@@ -171,7 +158,6 @@ fig5a_json = graph.graph_pie(
 # Building pie chart by changes share of top authors in last year
 fig8b_json = graph.graph_pie(
     last_year_df,
-    "result/fig8b.png",
     'month_year',
     "Share of Changes",
     settings["author"],
@@ -183,7 +169,6 @@ fig8b_json = graph.graph_pie(
 # Building line chart  by top authors by year
 fig3_json = graph.graph_line_author(
     df,
-    "result/fig3.png",
     'year',
     settings["author"],
     settings["num_top"],
@@ -194,7 +179,6 @@ fig3_json = graph.graph_line_author(
 # Building line chart  by top authors in last year
 fig6_json = graph.graph_line_author(
     last_year_df,
-    "result/fig6.png",
     'month_year',
     settings["author"],
     settings["num_top"],
@@ -205,7 +189,6 @@ fig6_json = graph.graph_line_author(
 # Building heatmap graph with distribution commits by hours by top authors for all years
 fig9_json = graph.graph_heatmap(
     df,
-    "result/fig9.png",
     settings["hour"],
     settings["author"],
     settings["num_top"],
@@ -217,7 +200,6 @@ fig9_json = graph.graph_heatmap(
 # Building heatmap graph with distribution commits by hours by top authors for last year
 fig10_json = graph.graph_heatmap(
     last_year_df,
-    "result/fig10.png",
     settings["hour"],
     settings["author"],
     settings["num_top"],
@@ -229,7 +211,6 @@ fig10_json = graph.graph_heatmap(
 # Building heatmap graph with distribution commits by hours for all users for all years
 fig12_json = graph.graph_heatmap(
     df,
-    "result/fig12.png",
     settings["hour"],
     settings["author"],
     settings["num_top"],
@@ -241,7 +222,6 @@ fig12_json = graph.graph_heatmap(
 # Building heatmap graph with distribution commits by hours for all users for last year
 fig11_json = graph.graph_heatmap(
     last_year_df,
-    "result/fig11.png",
     settings["hour"],
     settings["author"],
     settings["num_top"],
@@ -252,13 +232,11 @@ fig11_json = graph.graph_heatmap(
 
 fig15_json = graph.graph_bubble(
     df,
-    "result/fig15.png",
     "for All Years"
 )
 
 fig16_json = graph.graph_bubble(
     last_year_df,
-    "result/fig16.png",
     "in Last Year"
 )
 
