@@ -7,7 +7,9 @@ from .models import Report
 from .models import Repository
 from django.conf import settings
 import logging
-
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), "./../"))
+from scripts import git_log_viz
 
 logger = logging.getLogger(__name__)
 
@@ -125,12 +127,11 @@ def index(request):
     return render(request, "report_app/index.html", {"repos": repos})
 
 
-def save_report(settings, file_path):
-    """Save report metadata to the database."""
+def save_report(settings, report_content):
     report = Report.objects.create(
         report_name="Git Analytics Report",
         settings_json=settings,
-        file_path=file_path
+        report_content=git_log_viz.html_report(settings)
     )
     return report
 
@@ -196,16 +197,8 @@ def generate_report(request):
             result_dir = os.path.join(settings.BASE_DIR, "result")
             os.makedirs(result_dir, exist_ok=True)
 
-            # Save settings to JSON file
-            settings_path = os.path.join(result_dir, "settings.json")
-            with open(settings_path, "w") as f:
-                json.dump(settings_data, f, indent=4)
-
             # Run the script to generate the report
-            try:
-                subprocess.run(["python3", "scripts/git_log_viz.py"], check=True)
-            except subprocess.CalledProcessError as e:
-                return JsonResponse({"error": f"Script execution failed: {e}"}, status=500)
+            git_log_viz.html_report(settings_data)
 
             # Save report metadata in the database
             report_path = os.path.join("report_app", "templates", "report_app", "report.html")

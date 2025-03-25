@@ -6,7 +6,6 @@ import plotly.graph_objects as go
 
 def graph_line(
         df: pd.DataFrame,
-        fig_file_name: str,
         column_name_date: str,
         title: str,
         dtick: str):
@@ -22,14 +21,11 @@ def graph_line(
             dtick=dtick
         )
     )
-
-    fig.write_image(fig_file_name, width=1424, height=450, scale=2)
     return fig.to_json()
 
 
 def graph_table(
         df: pd.DataFrame,
-        fig_file_name: str,
         column_name_date: str,
         author: str,
         num_top: int,
@@ -56,13 +52,11 @@ def graph_table(
 
     fig = ff.create_table([list(table_data.keys())] + list(zip(*table_data.values())))
 
-    fig.write_image(fig_file_name, width=1424, scale=2)
     return fig.to_json()
 
 
 def graph_bar_line(
         df: pd.DataFrame,
-        fig_file_name: str,
         column_name_date: str,
         title: str,
         dtick: str):
@@ -104,13 +98,12 @@ def graph_bar_line(
             dtick=dtick
         )
     )
-    fig.write_image(fig_file_name, width=1424, height=450, scale=2)
+
     return fig.to_json()
 
 
 def graph_pie(
         df: pd.DataFrame,
-        fig_file_name: str,
         column_name_date: str,
         title: str,
         author: str,
@@ -158,13 +151,11 @@ def graph_pie(
         texttemplate="%{percent:.1%}"
     )
 
-    fig.write_image(fig_file_name, scale=2)
     return fig.to_json()
 
 
 def graph_line_author(
         df: pd.DataFrame,
-        fig_file_name: str,
         column_name_date: str,
         author: str,
         num_top: str,
@@ -211,13 +202,11 @@ def graph_line_author(
         )
     )
 
-    fig.write_image(fig_file_name, width=1424, height=450, scale=2)
     return fig.to_json()
 
 
 def graph_heatmap(
         df: pd.DataFrame,
-        fig_file_name: str,
         hour: str,
         author: str,
         num_top: int,
@@ -292,13 +281,11 @@ def graph_heatmap(
         height=heatmap_height
     )
 
-    fig.write_image(fig_file_name, width=1409, scale=2)
     return fig.to_json()
 
 
 def graph_bubble(
         df: pd.DataFrame,
-        fig_file_name: str,
         title_period: str,):
 
     commit_count = df.groupby('repo').size().reset_index(name='commit_count')
@@ -313,5 +300,4 @@ def graph_bubble(
     )
     fig.update_layout(title_x=0.5)
 
-    fig.write_image(fig_file_name, width=1424, height=450, scale=2)
     return fig.to_json()

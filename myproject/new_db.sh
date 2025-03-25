@@ -10,14 +10,19 @@ fi
 echo "Running migrations..."
 python3 manage.py migrate
 
+# Prompt for the superuser password securely
+echo -n "Enter password for the superuser: "
+read -s superuser_password
+echo    # Move to a new line for better formatting
 
 echo "Creating superuser..."
+
 python3 manage.py shell <<EOF
 from django.contrib.auth.models import User
 
 username = "natalapuzina"
 email = "puzinanata@gmail.com"
-password = "1102"
+password = "$superuser_password"
 
 if not User.objects.filter(username=username).exists():
     User.objects.create_superuser(username=username, email=email, password=password)
