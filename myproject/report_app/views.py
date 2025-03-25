@@ -7,7 +7,9 @@ from .models import Report
 from .models import Repository
 from django.conf import settings
 import logging
-
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), "./../"))
+from scripts import git_log_viz
 
 logger = logging.getLogger(__name__)
 
@@ -125,12 +127,11 @@ def index(request):
     return render(request, "report_app/index.html", {"repos": repos})
 
 
-def save_report(settings, file_path):
-    """Save report metadata to the database."""
+def save_report(settings, report_content):
     report = Report.objects.create(
         report_name="Git Analytics Report",
         settings_json=settings,
-        file_path=file_path
+        report_content=git_log_viz.html_report(settings)
     )
     return report
 
@@ -197,9 +198,6 @@ def generate_report(request):
             os.makedirs(result_dir, exist_ok=True)
 
             # Run the script to generate the report
-            import sys
-            sys.path.append(os.path.join(os.path.dirname(__file__), "./../"))
-            from scripts import git_log_viz
             git_log_viz.html_report(settings_data)
 
             # Save report metadata in the database
