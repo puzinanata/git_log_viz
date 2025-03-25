@@ -196,15 +196,11 @@ def generate_report(request):
             result_dir = os.path.join(settings.BASE_DIR, "result")
             os.makedirs(result_dir, exist_ok=True)
 
-            # Save settings to JSON file
-            settings_path = os.path.join(result_dir, "settings.json")
-            with open(settings_path, "w") as f:
-                json.dump(settings_data, f, indent=4)
-
             # Run the script to generate the report
             import sys
             sys.path.append(os.path.join(os.path.dirname(__file__), "./../"))
             from scripts import git_log_viz
+            git_log_viz.html_report(settings_data)
 
             # Save report metadata in the database
             report_path = os.path.join("report_app", "templates", "report_app", "report.html")
