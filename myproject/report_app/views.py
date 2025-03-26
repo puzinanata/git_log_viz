@@ -123,7 +123,6 @@ def find_and_sync_repos(base_directory="/var/lib/git_repos"):
 def index(request):
     find_and_sync_repos()
     repos = Repository.objects.all()  # Fetch repositories after updating the DB
-    print("Repositories passed to template:", list(repos))
     return render(request, "report_app/index.html", {"repos": repos})
 
 
@@ -141,14 +140,14 @@ def generate_report(request):
         try:
             # Get form data safely
             repo_list = request.POST.getlist("repo")
-            repo_count = request.POST.get("repo_count", "1").strip()
-            start_year = request.POST.get("start_year", "1900").strip()
-            finish_year = request.POST.get("finish_year", "2025").strip()
+            repo_count = int(request.POST.get("repo_count", 1))
+            start_year = int(request.POST.get("start_year", 1900))
+            finish_year = int(request.POST.get("finish_year", 2025))
+            num_top = int(request.POST.get("num_top", 10))
             author_type = request.POST.get("author", "").strip()
             excl_list = request.POST.get("exclude_username", "").strip()
             old_list = request.POST.get("old_username", "").strip()
             new_list = request.POST.get("new_username", "").strip()
-            num_top = request.POST.get("num_top", "10").strip()
             hour_type = request.POST.get("hour", "").strip()
 
             repo_list = [repo.strip() for repo in repo_list if repo.strip()]
@@ -166,18 +165,6 @@ def generate_report(request):
             excl_list = parse_list(excl_list)
             old_list = parse_list(old_list)
             new_list = parse_list(new_list)
-
-            # Convert numeric values safely
-            def safe_int(value, default):
-                try:
-                    return int(value)
-                except ValueError:
-                    return default
-
-            repo_count = safe_int(repo_count, 1)
-            start_year = safe_int(start_year, 1900)
-            finish_year = safe_int(finish_year, 2025)
-            num_top = safe_int(num_top, 10)
 
             # Create settings dictionary
             settings_data = {
