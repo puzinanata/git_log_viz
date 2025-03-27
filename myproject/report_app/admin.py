@@ -6,7 +6,7 @@ from .models import Repository
 # Register your models here.
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin):
-    list_display = ("report_name", "created_at")  # Show timestamp
+    list_display = ("id", "report_name", "created_at")  # Show timestamp
     readonly_fields = ("report_name",)  # Prevent automatic editing
     ordering = ("-created_at",)  # Sort reports by newest first
 

@@ -1,6 +1,6 @@
 import subprocess
 import os
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from .models import Report
 from .models import Repository
@@ -166,7 +166,7 @@ def generate_report(request):
                 report_content=report_content,
             )
 
-            return redirect("report")  # Redirect to the report page
+            return redirect("report", report_id=report.id)  # Redirect to the report page with an ID parameter
 
         except Exception as e:
             print("Error in generate_report():", e)
@@ -175,16 +175,9 @@ def generate_report(request):
     return JsonResponse({"error": "Invalid request method."}, status=400)
 
 
-def report(request):
-    # Retrieve the most recent report
-    latest_report = Report.objects.order_by("-created_at").first()
-
-    # If a report exists, pass content to the template
-    if latest_report:
-        return HttpResponse(latest_report.report_content)
-
-    # If no report exists, show a message or placeholder
-    return HttpResponse("<p>No report available.</p>")
+def report(request, report_id):
+    report = get_object_or_404(Report, id=report_id)
+    return HttpResponse(report.report_content)
 
 def update_vm(request):
     # Command to extract data from git log
