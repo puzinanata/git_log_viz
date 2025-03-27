@@ -1,4 +1,3 @@
-import json
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "./"))
@@ -9,14 +8,8 @@ from src import collect
 
 
 def html_report(settings):
-    # Generate repo_log_csv dynamically
-    repo_log_csv = ["result/git_log_{}.csv".format(repo.split('/')[-1]) for repo in settings["repo_name"]]
 
-    # Add it to settings dynamically
-    settings["repo_log_csv"] = repo_log_csv  # Now settings["repo_log_csv"] contains generated file names
-
-    with open("result/settings.json", "w") as file:
-        json.dump(settings, file, indent=4)
+    settings["repo_log_csv"] = ["result/git_log_{}.csv".format(repo.split('/')[-1]) for repo in settings["repo_name"]]
 
     # 1. Data Collection
 
@@ -281,9 +274,5 @@ def html_report(settings):
 
             templates.tail_template
     )
-
-    # write the JSON to the HTML template
-    with open('report_app/templates/report_app/report.html', 'w') as f:
-        f.write(html_js_report)
 
     return html_js_report

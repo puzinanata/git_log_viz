@@ -1,17 +1,16 @@
-import json
 import subprocess
 import os
 from django.shortcuts import render, redirect
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from .models import Report
 from .models import Repository
-from django.conf import settings
 import logging
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "./../"))
 from scripts import git_log_viz
 
 logger = logging.getLogger(__name__)
+
 
 def add_repo(request, base_directory="/var/lib/git_repos"):
     """Adds repositories to the database from a list of URLs and ensures they are synced."""
@@ -126,45 +125,23 @@ def index(request):
     return render(request, "report_app/index.html", {"repos": repos})
 
 
-def save_report(settings, report_content):
-    report = Report.objects.create(
-        report_name="Git Analytics Report",
-        settings_json=settings,
-        report_content=git_log_viz.html_report(settings)
-    )
-    return report
-
-
 def generate_report(request):
     if request.method == "POST":
         try:
             # Get form data safely
-            repo_list = request.POST.getlist("repo")
+            repo_list = [repo.strip() for repo in request.POST.getlist("repo") if repo.strip()]
             repo_count = int(request.POST.get("repo_count", 1))
             start_year = int(request.POST.get("start_year", 1900))
             finish_year = int(request.POST.get("finish_year", 2025))
             num_top = int(request.POST.get("num_top", 10))
             author_type = request.POST.get("author", "").strip()
-            excl_list = request.POST.get("exclude_username", "").strip()
-            old_list = request.POST.get("old_username", "").strip()
-            new_list = request.POST.get("new_username", "").strip()
+            excl_list = [x.strip() for x in request.POST.get("exclude_username", "").split(",") if
+                         x.strip()] if request.POST.get("exclude_username") else []
+            old_list = [x.strip() for x in request.POST.get("old_username", "").split(",") if
+                        x.strip()] if request.POST.get("old_username") else []
+            new_list = [x.strip() for x in request.POST.get("new_username", "").split(",") if
+                        x.strip()] if request.POST.get("new_username") else []
             hour_type = request.POST.get("hour", "").strip()
-
-            repo_list = [repo.strip() for repo in repo_list if repo.strip()]
-
-            def parse_list(input_str):
-                if input_str:
-                    try:
-                        return json.loads(input_str) if input_str.startswith("[") else [
-                            x.strip() for x in input_str.split(",") if x.strip()
-                        ]
-                    except json.JSONDecodeError:
-                        return [x.strip() for x in input_str.split(",") if x.strip()]
-                return []
-
-            excl_list = parse_list(excl_list)
-            old_list = parse_list(old_list)
-            new_list = parse_list(new_list)
 
             # Create settings dictionary
             settings_data = {
@@ -180,18 +157,16 @@ def generate_report(request):
                 "hour": hour_type,
             }
 
-            # Ensure result folder exists
-            result_dir = os.path.join(settings.BASE_DIR, "result")
-            os.makedirs(result_dir, exist_ok=True)
+            # Generate report into variable
+            report_content = git_log_viz.html_report(settings_data)
 
-            # Run the script to generate the report
-            git_log_viz.html_report(settings_data)
+            # Save report to database
+            report = Report.objects.create(
+                settings_json=settings_data,
+                report_content=report_content,
+            )
 
-            # Save report metadata in the database
-            report_path = os.path.join("report_app", "templates", "report_app", "report.html")
-            save_report(settings_data, report_path)
-
-            return redirect("report")
+            return redirect("report")  # Redirect to the report page
 
         except Exception as e:
             print("Error in generate_report():", e)
@@ -201,8 +176,15 @@ def generate_report(request):
 
 
 def report(request):
-    return render(request, "report_app/report.html")
+    # Retrieve the most recent report
+    latest_report = Report.objects.order_by("-created_at").first()
 
+    # If a report exists, pass content to the template
+    if latest_report:
+        return HttpResponse(latest_report.report_content)
+
+    # If no report exists, show a message or placeholder
+    return HttpResponse("<p>No report available.</p>")
 
 def update_vm(request):
     # Command to extract data from git log
