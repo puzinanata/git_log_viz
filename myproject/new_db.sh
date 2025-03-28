@@ -13,7 +13,7 @@ python3 manage.py migrate
 # Prompt for the superuser password securely
 echo -n "Enter password for the superuser: "
 read -s superuser_password
-echo    # Move to a new line for better formatting
+echo
 
 echo "Creating superuser..."
 
@@ -31,4 +31,4 @@ else:
     print(f"Superuser {username} already exists.")
 EOF
 
-echo " Database reset complete."
+echo " Database update complete."
