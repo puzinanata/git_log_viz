@@ -26,7 +26,7 @@
     <p id="repo-status"></p>  <!-- Status message -->
 
     <!-- Form for Report Generation -->
-    <form method="POST" action="{% url 'generate_report' %}">
+    <form id="report-form" method="POST" action="{% url 'generate_report' %}">
         {% csrf_token %}
 
         <label for="repo">Select Repositories:</label>
@@ -83,8 +83,13 @@
         </div>
 
         <button type="submit">Generate Report</button>
-
     </form>
+
+    <!-- Report Container -->
+    <div id="report-container">
+        <h3>Generated Report</h3>
+        <div id="report-content"></div>
+    </div>
 
     <!-- Include jQuery & Select2 JS (from CDN) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -131,6 +136,31 @@
                         // Re-enable button and reset text
                         $button.prop('disabled', false).text("Add Repositories");
                     }
+                });
+            });
+
+            // Generate report via AJAX
+            $(document).ready(function () {
+                $('#report-form').on('submit', function (e) {
+                    e.preventDefault();  // Prevent default form submission
+
+                    $.ajax({
+                        url: "{% url 'generate_report' %}",
+                        type: "POST",
+                        data: $(this).serialize(),  // Serialize form data
+                        headers: { "X-CSRFToken": "{{ csrf_token }}" },  // ✅ Ensure CSRF token is included
+                        beforeSend: function () {
+                            $('#report-content').html("<p>Generating report... Please wait.</p>");
+                        },
+                        success: function (response) {
+                            $('#report-content').html(response);  // ✅ Display report content correctly
+                        },
+                        error: function (xhr) {
+                            let errorMessage = xhr.responseText || "Error generating report. Please try again.";
+                            $('#report-content').html(`<p>${errorMessage}</p>`);
+                            console.log("AJAX Error:", xhr);
+                        }
+                    });
                 });
             });
 

@@ -166,8 +166,8 @@ def generate_report(request):
                 report_content=report_content,
             )
 
-            return redirect("report", report_id=report.id)  # Redirect to the report page with an ID
-            # return JsonResponse({"report_id": report.id})
+            # return redirect("report", report_id=report.id)  # Redirect to the report page with an ID
+            return HttpResponse(report_content)
 
         except Exception as e:
             print("Error in generate_report():", e)
