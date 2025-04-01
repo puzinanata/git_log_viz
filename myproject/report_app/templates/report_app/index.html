@@ -148,12 +148,12 @@
                         url: "{% url 'generate_report' %}",
                         type: "POST",
                         data: $(this).serialize(),  // Serialize form data
-                        headers: { "X-CSRFToken": "{{ csrf_token }}" },  // ✅ Ensure CSRF token is included
+                        headers: { "X-CSRFToken": "{{ csrf_token }}" },  // Ensure CSRF token is included
                         beforeSend: function () {
                             $('#report-content').html("<p>Generating report... Please wait.</p>");
                         },
                         success: function (response) {
-                            $('#report-content').html(response);  // ✅ Display report content correctly
+                            $('#report-content').html(response);  //Display report content correctly
                         },
                         error: function (xhr) {
                             let errorMessage = xhr.responseText || "Error generating report. Please try again.";
