@@ -153,7 +153,7 @@
                             $('#report-content').html("<p>Generating report... Please wait.</p>");
                         },
                         success: function (response) {
-                            $('#report-content').html(response);  //Display report content correctly
+                            $("#report-content").html(response.report_content);  // Display report content correctly
                         },
                         error: function (xhr) {
                             let errorMessage = xhr.responseText || "Error generating report. Please try again.";
@@ -202,7 +202,8 @@
     <script>
         $(document).ready(function () {
             // Handle report generation form submission
-            $('form[action="{% url 'generate_report' %}"]').on('submit', function () {
+            $('
+            form[action="{% url 'generate_report' %}"]').on('submit', function () {
                 let $submitButton = $(this).find('button[type="submit"]');
                 $submitButton.prop('disabled', true).text("Generating...");
                 $('#repo-status').text("Generating report... Please wait.");

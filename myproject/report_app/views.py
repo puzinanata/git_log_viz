@@ -1,26 +1,19 @@
 import subprocess
 import os
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from .models import Report
 from .models import Repository
-import logging
+from background_task import background
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "./../"))
 from scripts import git_log_viz
-
-logger = logging.getLogger(__name__)
 
 
 def add_repo(request, base_directory="/var/lib/git_repos"):
     """Adds repositories to the database from a list of URLs and ensures they are synced."""
     repo_urls = request.POST.get("repo_urls", "").split(",")
     repo_urls = [url.strip() for url in repo_urls if url.strip()]  # Remove empty values
-
-    logger.debug(f"Received repo URLs: {repo_urls}")  # Log the URLs received
-
-    if not repo_urls:
-        return JsonResponse({"error": "No repositories provided."}, status=400)
 
     # Ensure the base directory exists and is writable
     os.makedirs(base_directory, exist_ok=True)
@@ -38,39 +31,21 @@ def add_repo(request, base_directory="/var/lib/git_repos"):
         repo_exists_in_fs = os.path.isdir(repo_path) and os.path.exists(os.path.join(repo_path, ".git"))
 
         if repo_exists_in_db and repo_exists_in_fs:
-            logger.debug(f"Repo already exists in DB & filesystem: {repo_name}")
             error_repos.append(url)
             continue
 
-        try:
-            # Clone the repository
-            result = subprocess.run(
-                f"cd {base_directory}; git clone {url} 2>&1",
-                shell=True, capture_output=True, text=True
-            )
-            logger.debug(f"Git clone output for {repo_name}: {result.stdout}")
-            if result.stderr:
-                logger.error(f"Git clone warning/errors: {result.stderr}")
+        # Clone the repository
+        subprocess.run(
+            f"cd {base_directory}; git clone {url} 2>&1",
+            shell=True, capture_output=True, text=True
+        )
 
-            # Ensure the repository was cloned successfully
-            if not os.path.isdir(repo_path) or not os.path.exists(os.path.join(repo_path, ".git")):
-                raise RuntimeError(f"Git clone failed: {repo_path} does not exist after cloning.")
-
-            # Add to database
-            repo, created = Repository.objects.update_or_create(
-                name=repo_name,
-                defaults={'path': repo_path, 'url': url}
-            )
-            if created:
-                logger.debug(f"Added new repository: {repo_name}")
-            else:
-                logger.debug(f"Updated existing repository: {repo_name}")
-
-            added_repos.append(url)
-
-        except Exception as e:
-            error_repos.append(url)
-            logger.error(f"Error while processing {url}: {str(e)}")
+        # Add to database
+        Repository.objects.update_or_create(
+            name=repo_name,
+            defaults={'path': repo_path, 'url': url}
+        )
+        added_repos.append(url)
 
     return JsonResponse({"added": added_repos, "errors": error_repos})
 
@@ -82,7 +57,6 @@ def find_and_sync_repos(base_directory="/var/lib/git_repos"):
         return
 
     current_repo_paths = set()  # Stores repos found in the VM
-    print(f"Scanning directory: {base_directory}")
 
     # Walk through all subdirectories to find Git repositories
     for root, dirs, files in os.walk(base_directory):
@@ -119,66 +93,65 @@ def find_and_sync_repos(base_directory="/var/lib/git_repos"):
         print("No repositories found.")
 
 
-def index(request):
+@background(schedule=10)  # Runs 10 seconds later
+def sync_repos_background():
     find_and_sync_repos()
+
+
+def index(request):
+    sync_repos_background(schedule=10)
     repos = Repository.objects.all()  # Fetch repositories after updating the DB
     return render(request, "report_app/index.html", {"repos": repos})
 
 
 def generate_report(request):
     if request.method == "POST":
-        try:
-            # Get form data safely
-            repo_list = [repo.strip() for repo in request.POST.getlist("repo") if repo.strip()]
-            repo_count = int(request.POST.get("repo_count", 1))
-            start_year = int(request.POST.get("start_year", 1900))
-            finish_year = int(request.POST.get("finish_year", 2025))
-            num_top = int(request.POST.get("num_top", 10))
-            author_type = request.POST.get("author", "").strip()
-            excl_list = [x.strip() for x in request.POST.get("exclude_username", "").split(",") if
-                         x.strip()] if request.POST.get("exclude_username") else []
-            old_list = [x.strip() for x in request.POST.get("old_username", "").split(",") if
-                        x.strip()] if request.POST.get("old_username") else []
-            new_list = [x.strip() for x in request.POST.get("new_username", "").split(",") if
-                        x.strip()] if request.POST.get("new_username") else []
-            hour_type = request.POST.get("hour", "").strip()
+        # Get form data safely
+        repo_list = [repo.strip() for repo in request.POST.getlist("repo") if repo.strip()]
+        repo_count = int(request.POST.get("repo_count", 1))
+        start_year = int(request.POST.get("start_year", 1900))
+        finish_year = int(request.POST.get("finish_year", 2025))
+        num_top = int(request.POST.get("num_top", 10))
+        author_type = request.POST.get("author", "").strip()
+        excl_list = [x.strip() for x in request.POST.get("exclude_username", "").split(",") if
+                     x.strip()] if request.POST.get("exclude_username") else []
+        old_list = [x.strip() for x in request.POST.get("old_username", "").split(",") if
+                    x.strip()] if request.POST.get("old_username") else []
+        new_list = [x.strip() for x in request.POST.get("new_username", "").split(",") if
+                    x.strip()] if request.POST.get("new_username") else []
+        hour_type = request.POST.get("hour", "").strip()
 
-            # Create settings dictionary
-            settings_data = {
-                "repo_name": repo_list,
-                "repo_count": repo_count,
-                "start_year": start_year,
-                "finish_year": finish_year,
-                "author": author_type,
-                "exclude_username": excl_list,
-                "old_username": old_list,
-                "new_username": new_list,
-                "num_top": num_top,
-                "hour": hour_type,
-            }
+        # Create settings dictionary
+        settings_data = {
+            "repo_name": repo_list,
+            "repo_count": repo_count,
+            "start_year": start_year,
+            "finish_year": finish_year,
+            "author": author_type,
+            "exclude_username": excl_list,
+            "old_username": old_list,
+            "new_username": new_list,
+            "num_top": num_top,
+            "hour": hour_type,
+        }
 
-            # Generate report into variable
-            report_content = git_log_viz.html_report(settings_data)
+        # Generate report into variable
+        report_content = git_log_viz.html_report(settings_data)
 
-            # Save report to database
-            report = Report.objects.create(
-                settings_json=settings_data,
-                report_content=report_content,
-            )
+        # Save report to database
+        report = Report.objects.create(
+            settings_json=settings_data,
+            report_content=report_content,
+        )
 
-            # return redirect("report", report_id=report.id)  # Redirect to the report page with an ID
-            return HttpResponse(report_content)
-
-        except Exception as e:
-            print("Error in generate_report():", e)
-            return JsonResponse({"error": f"An error occurred: {str(e)}"}, status=500)
-
-    return JsonResponse({"error": "Invalid request method."}, status=400)
+        return JsonResponse({"report_content": report_content}, status=200)
+        # return HttpResponse(report_content)
 
 
 def report(request, report_id):
     report = get_object_or_404(Report, id=report_id)
     return HttpResponse(report.report_content)
+
 
 def update_vm(request):
     # Command to extract data from git log
