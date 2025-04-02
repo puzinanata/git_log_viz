@@ -201,18 +201,6 @@
 
     <script>
         $(document).ready(function () {
-            // Handle report generation form submission
-            $('
-            form[action="{% url 'generate_report' %}"]').on('submit', function () {
-                let $submitButton = $(this).find('button[type="submit"]');
-                $submitButton.prop('disabled', true).text("Generating...");
-                $('#repo-status').text("Generating report... Please wait.");
-            });
-        });
-    </script>
-
-    <script>
-        $(document).ready(function () {
             $('#toggle-fields').on('click', function () {
                 let $fields = $('#hidden-fields');
                 if ($fields.is(':visible')) {
