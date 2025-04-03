@@ -11,11 +11,11 @@ class Report(models.Model):
     report_content = models.TextField()  # Report HTML content
 
     def save(self, *args, **kwargs):
-        """Generate MD5 hash from settings_json before saving."""
-        json_str = json.dumps(self.settings_json, sort_keys=True)  # Convert JSON to string
-        new_hash = hashlib.md5(json_str.encode()).hexdigest()
+        """Generate MD5 hash from settings_json only if report_name is empty."""
+        if not self.report_name:  # Allow manual editing; only auto-generate if empty
+            json_str = json.dumps(self.settings_json, sort_keys=True)  # Convert JSON to string
+            self.report_name = hashlib.md5(json_str.encode()).hexdigest()  # Generate MD5
 
-        self.report_name = new_hash  # Assign the hash as report_name
         super().save(*args, **kwargs)  # Call the parent save method
 
 
