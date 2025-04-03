@@ -1,23 +1,46 @@
+/* Center the form */
+#add-repo-form {
+    width: 50%; /* Adjust width as needed */
+    margin: 20px auto; /* Centering */
+}
+
+#report-form {
+    width: 50%; /* Adjust width as needed */
+    margin: 20px auto; /* Centering */
+}
+
 body {
     font-family: Arial, sans-serif;
-    margin: 20px;
+    width: 100%; /* Adjust width as needed */
+    margin: 20px auto; /* Centering */
     padding: 20px;
-    max-width: 600px;
     background-color: #f4f4f4;
     position: relative;
 }
 
-/* Git cat image in top-left corner */
+/* Container to align logo and heading */
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    position: relative;
+    padding: 10px 0;
+}
+
+/* Logo stays on the left */
 .logo {
-    position: absolute;
-    top: 2px;
-    left: 20px;
     width: 10vw;
     max-width: 80px;
     height: auto;
 }
 
 h2 {
+    margin: 0;
+    color: #941e3a;
+}
+
+h3 {
     text-align: center;
     color:  #941e3a;
 }
