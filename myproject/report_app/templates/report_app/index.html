@@ -13,9 +13,11 @@
 </head>
 
 <body>
-    <img src="{% static 'images/cat_git.jpg' %}" alt="Git Cat" class="logo">
+    <div class="header-container">
+        <img src="{% static 'images/cat_git.jpg' %}" alt="Git Cat" class="logo">
+        <h2>Configure Git Analytics Report</h2>
+    </div>
 
-    <h2>Configure Git Analytics Report</h2>
 
     <!-- Form for Adding Repositories -->
     <form id="add-repo-form">
@@ -26,7 +28,7 @@
     <p id="repo-status"></p>  <!-- Status message -->
 
     <!-- Form for Report Generation -->
-    <form method="POST" action="{% url 'generate_report' %}">
+    <form id="report-form" method="POST" action="{% url 'generate_report' %}">
         {% csrf_token %}
 
         <label for="repo">Select Repositories:</label>
@@ -83,8 +85,14 @@
         </div>
 
         <button type="submit">Generate Report</button>
-
     </form>
+
+    <!-- Report Container -->
+    <div id="report-container">
+        <h3>Generated Report</h3>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <div id="report-content"></div>
+    </div>
 
     <!-- Include jQuery & Select2 JS (from CDN) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -134,6 +142,31 @@
                 });
             });
 
+            // Generate report via AJAX
+            $(document).ready(function () {
+                $('#report-form').on('submit', function (e) {
+                    e.preventDefault();  // Prevent default form submission
+
+                    $.ajax({
+                        url: "{% url 'generate_report' %}",
+                        type: "POST",
+                        data: $(this).serialize(),  // Serialize form data
+                        headers: { "X-CSRFToken": "{{ csrf_token }}" },  // Ensure CSRF token is included
+                        beforeSend: function () {
+                            $('#report-content').html("<p>Generating report... Please wait.</p>");
+                        },
+                        success: function (response) {
+                            $("#report-content").html(response.report_content);  // Display report content correctly
+                        },
+                        error: function (xhr) {
+                            let errorMessage = xhr.responseText || "Error generating report. Please try again.";
+                            $('#report-content').html(`<p>${errorMessage}</p>`);
+                            console.log("AJAX Error:", xhr);
+                        }
+                    });
+                });
+            });
+
             // Initialize Select2 for the repository dropdown
             $('#repo').select2();
 
@@ -167,17 +200,6 @@
 
             hiddenField.value = JSON.stringify(userList);
         }
-    </script>
-
-    <script>
-        $(document).ready(function () {
-            // Handle report generation form submission
-            $('form[action="{% url 'generate_report' %}"]').on('submit', function () {
-                let $submitButton = $(this).find('button[type="submit"]');
-                $submitButton.prop('disabled', true).text("Generating...");
-                $('#repo-status').text("Generating report... Please wait.");
-            });
-        });
     </script>
 
     <script>
