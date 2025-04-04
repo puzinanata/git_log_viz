@@ -8,6 +8,8 @@ from background_task import background
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "./../"))
 from scripts import git_log_viz
+import hashlib
+import json
 
 
 def add_repo(request, base_directory="/var/lib/git_repos"):
@@ -135,18 +137,28 @@ def generate_report(request):
             "hour": hour_type,
         }
 
-        # Generate report into variable
+        # Calculate the MD5 hash
+        json_str = json.dumps(settings_data, sort_keys=True)
+        report_name = hashlib.md5(json_str.encode()).hexdigest()
+
+        # Look for an existing report with this hash
+        existing_report = Report.objects.filter(report_name=report_name).order_by('-created_at').first()
+
+        # Always generate updated content
         report_content = git_log_viz.html_report(settings_data)
 
-        # Save report to database
-        report = Report.objects.create(
+        # Save a new version of report with the same hash (always save)
+        new_report = Report.objects.create(
+            report_name=report_name,
             settings_json=settings_data,
             report_content=report_content,
         )
 
-        return JsonResponse({"report_content": report_content}, status=200)
-        # return HttpResponse(report_content)
-
+        # If old report exists, return its content, else return new one
+        if existing_report:
+            return JsonResponse({"report_content": existing_report.report_content}, status=200)
+        else:
+            return JsonResponse({"report_content": new_report.report_content}, status=200)
 
 def report(request, report_id):
     report = get_object_or_404(Report, id=report_id)
