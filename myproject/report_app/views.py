@@ -2,6 +2,7 @@ import subprocess
 import os
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse, HttpResponse
+from django.db import transaction
 from .models import Report
 from .models import Repository
 from background_task import background
@@ -141,24 +142,39 @@ def generate_report(request):
         json_str = json.dumps(settings_data, sort_keys=True)
         report_name = hashlib.md5(json_str.encode()).hexdigest()
 
-        # Look for an existing report with this hash
-        existing_report = Report.objects.filter(report_name=report_name).order_by('-created_at').first()
-
-        # Always generate updated content
-        report_content = git_log_viz.html_report(settings_data)
-
-        # Save a new version of report with the same hash (always save)
+        # Save a new version of report
         new_report = Report.objects.create(
             report_name=report_name,
             settings_json=settings_data,
-            report_content=report_content,
+            report_content=git_log_viz.html_report(settings_data),
         )
 
-        # If old report exists, return its content, else return new one
-        if existing_report:
-            return JsonResponse({"report_content": existing_report.report_content}, status=200)
+        # Find previous saved report with the same hash to display
+        previous_report = (
+            Report.objects
+            .filter(report_name=report_name)
+            .exclude(id=new_report.id)
+            .order_by('-created_at')
+            .first()
+        )
+
+        # If a previous report exists, return its content
+        if previous_report:
+            print("Previous report found — returning cached version")
+            # Return the previous report content
+            response = JsonResponse({"report_content": previous_report.report_content}, status=200)
+
+            # Now, delete all reports with the same hash, excluding the newly created one
+            with transaction.atomic():
+                existing_reports = Report.objects.filter(report_name=report_name).exclude(id=new_report.id)
+                existing_reports.delete()  # Delete previous reports
+
         else:
-            return JsonResponse({"report_content": new_report.report_content}, status=200)
+            print("No previous report found — returning newly generated report")
+            # Return the newly generated report content
+            response = JsonResponse({"report_content": new_report.report_content}, status=200)
+
+    return response
 
 def report(request, report_id):
     report = get_object_or_404(Report, id=report_id)
