@@ -16,6 +16,15 @@
     <div class="header-container">
         <img src="{% static 'images/cat_git.jpg' %}" alt="Git Cat" class="logo">
         <h2>Configure Git Analytics Report</h2>
+
+        <div style="position: absolute; top: 20px; right: 20px;">
+            {% if user.is_authenticated %}
+                Welcome, {{ user.username }}! <a href="{% url 'logout' %}">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a> | <a href="{% url 'register' %}">Register</a>
+            {% endif %}
+        </div>
+
     </div>
 
 

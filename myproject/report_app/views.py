@@ -6,13 +6,14 @@ from django.db import transaction
 from .models import Report
 from .models import Repository
 from background_task import background
+from django.contrib.auth.decorators import login_required
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "./../"))
 from scripts import git_log_viz
 import hashlib
 import json
 
-
+@login_required
 def add_repo(request, base_directory="/var/lib/git_repos"):
     """Adds repositories to the database from a list of URLs and ensures they are synced."""
     repo_urls = request.POST.get("repo_urls", "").split(",")
