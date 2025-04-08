@@ -5,7 +5,6 @@ from django.http import JsonResponse, HttpResponse
 from django.db import transaction
 from .models import Report
 from .models import Repository
-from background_task import background
 from django.contrib.auth.decorators import login_required
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "./../"))
@@ -97,13 +96,8 @@ def find_and_sync_repos(base_directory="/var/lib/git_repos"):
         print("No repositories found.")
 
 
-@background(schedule=10)  # Runs 10 seconds later
-def sync_repos_background():
-    find_and_sync_repos()
-
-
 def index(request):
-    sync_repos_background(schedule=10)
+    find_and_sync_repos()
     repos = Repository.objects.all()  # Fetch repositories after updating the DB
     return render(request, "report_app/index.html", {"repos": repos})
 
