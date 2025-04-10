@@ -16,12 +16,15 @@
 
     <div class="auth-container">
         {% if user.is_authenticated %}
-            <span>Welcome, {{ user.username }}!</span>
-            <!-- Logout link placed outside the form to prevent background inheritance -->
-            <form id="logout-form" method="POST"  action="{% url 'logout' %}" class="logout-form">
-                {% csrf_token %}
-                <button type="submit" class="logout-link">Logout</button>
-            </form>
+            <span>Welcome, {{ user.username }}!
+                <!-- Logout form inside the span -->
+                <form id="logout-form" method="POST" action="{% url 'logout' %}" class="logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-link">
+                        Logout
+                    </button>
+                </form>
+            </span>
         {% else %}
             <a href="{% url 'login' %}">Login</a> | <a href="{% url 'register' %}">Register</a>
         {% endif %}

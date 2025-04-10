@@ -23,17 +23,7 @@ body {
     position: relative;
     color: #941e3a;
     display: flex;
-    align-items: center;
-    gap: 10px;  /* Space between username and logout link */
-}
-
-/* Ensure the logout form is inline with the username */
-.logout-form {
-    margin: 0 !important;  /* Remove form margins */
-    padding: 0 !important;  /* Remove padding from form */
-    background: none !important;  /* Remove background */
-    border: none !important;  /* Remove borders */
-    display: inline !important;  /* Make the form inline, so it aligns with the username */
+    gap: 10px;
 }
 
 /* Style the logout button to look like a link, with no button-like styles */
