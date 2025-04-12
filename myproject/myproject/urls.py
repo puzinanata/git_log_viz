@@ -21,4 +21,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("report_app.urls")),  # Connects to report_app/urls.py
     path('api/', include('report_app.urls')),
+    path('accounts/', include('accounts.urls')),
 ]

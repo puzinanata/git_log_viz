@@ -1,0 +1,7 @@
+<h2>Registration of new user</h2>
+<form class = "form-with-validation" method="POST">
+   {% csrf_token %}
+   {{ form.as_p }}
+  <button type="submit">Register</button>
+</form>
+

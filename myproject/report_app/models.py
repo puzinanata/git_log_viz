@@ -1,6 +1,4 @@
 from django.db import models
-import hashlib
-import json
 
 
 class Report(models.Model):

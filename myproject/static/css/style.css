@@ -18,6 +18,38 @@ body {
     position: relative;
 }
 
+/* General styles for the auth container (username and links) */
+.auth-container {
+    position: relative;
+    color: #941e3a;
+    display: flex;
+    gap: 10px;
+}
+
+/* Style the logout button to look like a link, with no button-like styles */
+.logout-link {
+    background: none !important;
+    border: none !important;
+    color: #007bff !important;
+    text-decoration: underline !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    font-size: 1rem !important;
+    display: inline !important;
+}
+
+/* Remove any button hover styles */
+.logout-link:hover {
+    text-decoration: none !important;  /* Remove underline when hovering */
+}
+
+/* Form Styling (Remove inherited styles like shadow or background) */
+form {
+    box-shadow: none !important;
+    background: none !important;
+}
+
+
 /* Container to align logo and heading */
 .header-container {
     display: flex;
