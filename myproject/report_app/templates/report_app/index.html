@@ -118,6 +118,7 @@
 
     <script>
         $(document).ready(function () {
+            const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
 
             // Handle form submission to add repositories
             $('#add-repo-form').on('submit', function (e) {
@@ -128,34 +129,31 @@
                     alert("Please enter at least one repository URL.");
                     return;
                 }
-                // Disable button and show "Processing..." message
-                let $addButton = $(this).find('button[type="submit"]'); // Target only "Add Repositories" button
+
+                let $addButton = $(this).find('button[type="submit"]');
                 let $status = $('#repo-status');
 
                 $addButton.prop('disabled', true).text("Adding...");
                 $status.text("Processing... Please wait.");
 
-                console.log('URLs to send:', repoUrls);  // Log the URLs to confirm data
-
                 $.ajax({
                     url: "{% url 'add_repo' %}",
                     type: "POST",
                     data: {
-                        repo_urls: repoUrls,  // Sending repo URLs
+                        repo_urls: repoUrls,
                         csrfmiddlewaretoken: '{{ csrf_token }}'
                     },
                     success: function (response) {
-                        $('#repo-status').text("Repositories added successfully!");
-                        $('#repo-urls').val("");  // Clear input field
-                        location.reload();  // Refresh page to show new repos
+                        $status.text("Repositories added successfully!");
+                        $('#repo-urls').val("");
+                        location.reload();
                     },
                     error: function (xhr) {
-                        $('#repo-status').text("Error: " + xhr.responseJSON.error);
+                        let errorMessage = xhr.responseJSON?.error || "An error occurred.";
                         $status.text("Error: " + errorMessage);
                     },
                     complete: function () {
-                        // Re-enable button and reset text
-                        $button.prop('disabled', false).text("Add Repositories");
+                        $addButton.prop('disabled', false).text("Add Repositories");
                     }
                 });
             });
