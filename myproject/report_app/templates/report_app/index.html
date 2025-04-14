@@ -117,46 +117,58 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
     <script>
-        $(document).ready(function () {
-            const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+            $(document).ready(function () {
+                const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
 
-            // Handle form submission to add repositories
-            $('#add-repo-form').on('submit', function (e) {
-                e.preventDefault();
+                $('#add-repo-form').on('submit', function (e) {
+                    e.preventDefault();
 
-                let repoUrls = $('#repo-urls').val().trim();
-                if (!repoUrls) {
-                    alert("Please enter at least one repository URL.");
-                    return;
-                }
+                    let repoUrls = $('#repo-urls').val().trim();
+                    let $addButton = $(this).find('button[type="submit"]');
+                    let $status = $('#repo-status');
 
-                let $addButton = $(this).find('button[type="submit"]');
-                let $status = $('#repo-status');
-
-                $addButton.prop('disabled', true).text("Adding...");
-                $status.text("Processing... Please wait.");
-
-                $.ajax({
-                    url: "{% url 'add_repo' %}",
-                    type: "POST",
-                    data: {
-                        repo_urls: repoUrls,
-                        csrfmiddlewaretoken: '{{ csrf_token }}'
-                    },
-                    success: function (response) {
-                        $status.text("Repositories added successfully!");
-                        $('#repo-urls').val("");
-                        location.reload();
-                    },
-                    error: function (xhr) {
-                        let errorMessage = xhr.responseJSON?.error || "An error occurred.";
-                        $status.text("Error: " + errorMessage);
-                    },
-                    complete: function () {
-                        $addButton.prop('disabled', false).text("Add Repositories");
+                    if (!repoUrls) {
+                        alert("Please enter at least one repository URL.");
+                        return;
                     }
+
+                    // 👇 Check login before sending request
+                    if (!isAuthenticated) {
+                        $status.text("Please log in or register to add repositories.");
+                        return;
+                    }
+
+                    $addButton.prop('disabled', true).text("Adding...");
+                    $status.text("Processing... Please wait.");
+
+                    $.ajax({
+                        url: "{% url 'add_repo' %}",
+                        type: "POST",
+                        data: {
+                            repo_urls: repoUrls
+                        },
+                        headers: {
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                       success: function (response) {
+                            console.log("Server response:", response);
+                            $status.text("Repositories added successfully!");
+                            $('#repo-urls').val("");
+
+                            setTimeout(function () {
+                                location.reload();
+                            }, 1000);
+                        },
+
+                        error: function (xhr) {
+                            let errorMessage = xhr.responseJSON?.error || "An error occurred.";
+                            $status.text("Error: " + errorMessage);
+                        },
+                        complete: function () {
+                            $addButton.prop('disabled', false).text("Add Repositories");
+                        }
+                    });
                 });
-            });
 
             // Generate report via AJAX
             $(document).ready(function () {
