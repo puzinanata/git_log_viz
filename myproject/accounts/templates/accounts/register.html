@@ -1,7 +1,25 @@
-<h2>Registration of new user</h2>
-<form class = "form-with-validation" method="POST">
-   {% csrf_token %}
-   {{ form.as_p }}
-  <button type="submit">Register</button>
-</form>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}?v=1">
+</head>
+
+<body>
+    <div id="register-form-container" style="width: 50%; margin: 40px auto;">
+        <h2 style="text-align: center; color: #941e3a;">Registration of new user</h2>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Register</button>
+        </form>
+    </div>
+</body>
+
+</html>
 
