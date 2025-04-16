@@ -3,7 +3,7 @@ import hashlib
 import os
 
 
-def test_some():
+def test_csv():
     # Preparation
     result_file_csv = "result/git_log_test.csv"
     if os.path.exists(result_file_csv):
