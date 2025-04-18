@@ -1,4 +1,4 @@
 #!/bin/bash
 
 cd myproject
-pytest
+pytest -s
