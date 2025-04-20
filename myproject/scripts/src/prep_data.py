@@ -1,8 +1,7 @@
 import pandas as pd
 
-# 2. Data Cleaning and Data Processing
 
-
+# Data Cleaning and Data Processing
 def process_data(
         result_path: str,
         exclude_username: str,

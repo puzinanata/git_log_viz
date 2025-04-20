@@ -3,9 +3,9 @@ import re
 import os
 import pandas as pd
 
-# 1. Data Collection
 
 
+# Data Collection
 def collect_data(
         csv_path: str,
         repo_name: list,
@@ -93,7 +93,7 @@ def collect_data(
                     print(f"{count_commit} new commits in {repo_path} should be added after update to csv")
                     repo_logs_upd[repo_path] = new_commits
 
-    # 1.2. Process the output
+    # Process the output
 
     # Regex to match commit details and the summary line
 
@@ -114,7 +114,7 @@ def collect_data(
     summary_pattern = r"(\d+) files? \S+, (\d+) \S+?\([\+\-]\),? ?(\d+)?"
     hour_pattern = r"(\d{2}):\d{2}:\d{2}"
 
-    # 1.3.Process logs for each repository
+    # Process logs for each repository
     def process_log(dict_name: dict, create_db: bool):
         commits = {}
 
@@ -158,7 +158,7 @@ def collect_data(
     # update exist
     process_log(repo_logs_upd, False)
 
-    # 1.4 Read data from cvs & save df to csv with all repos data
+    # Read data from cvs & save df to csv with all repos data
     df = pd.concat([pd.read_csv(file) for file in repo_log_csv], ignore_index=True)
     df.to_csv(csv_path, index=False)
     return df
