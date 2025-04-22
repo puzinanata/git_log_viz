@@ -15,9 +15,21 @@ class Report(models.Model):
 class Repository(models.Model):
     name = models.CharField(max_length=255, unique=True)  # Repo name
     path = models.CharField(max_length=500, unique=True)  # Repo path
-    url = models.CharField(max_length=500, null=True, blank=True)
+    url = models.URLField(max_length=500, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     updated_at = models.DateTimeField(auto_now=True)  # Automatically updates on save
 
     def __str__(self):
         return self.name
+
+
+class Commit(models.Model):
+    repository = models.ForeignKey(Repository, on_delete=models.CASCADE)
+    commit_hash = models.CharField(max_length=40, unique=True)
+    date = models.DateTimeField()
+    hour = models.IntegerField()
+    email = models.EmailField()
+    num_changes = models.IntegerField()
+
+    def __str__(self):
+        return self.repository.name
