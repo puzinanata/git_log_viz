@@ -12,6 +12,7 @@ from scripts import git_log_viz
 import hashlib
 import json
 
+
 @login_required
 def add_repo(request, base_directory="/var/lib/git_repos"):
     """Adds repositories to the database from a list of URLs and ensures they are synced."""
@@ -171,6 +172,7 @@ def generate_report(request):
 
     return response
 
+
 def report(request, report_id):
     report = get_object_or_404(Report, id=report_id)
     return HttpResponse(report.report_content)
@@ -182,6 +184,9 @@ def update_vm(request):
 
     # Command to update local git repo
     command_pull = "git pull &> /dev/null"
+
+    # Command to apply migrations
+    command_migrate = "python3 manage.py migrate"
 
     my_repo_path = subprocess.run(
         'pwd',
@@ -207,6 +212,9 @@ def update_vm(request):
         text=True,
         capture_output=True
     ).stdout.strip()
+
+    # Apply migrations
+    subprocess.run(f'cd {my_repo_path}; {command_migrate}', shell=True)
 
     last_commit_after_pull = subprocess.run(
         f'cd {my_repo_path}; {command_last_commit}',
