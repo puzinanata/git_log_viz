@@ -22,14 +22,3 @@ class Repository(models.Model):
     def __str__(self):
         return self.name
 
-
-class Commit(models.Model):
-    repository = models.ForeignKey(Repository, on_delete=models.CASCADE)
-    commit_hash = models.CharField(max_length=40, unique=True)
-    date = models.DateTimeField()
-    hour = models.IntegerField()
-    email = models.EmailField()
-    num_changes = models.IntegerField()
-
-    def __str__(self):
-        return self.repository.name
