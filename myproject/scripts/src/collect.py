@@ -4,7 +4,6 @@ import os
 import pandas as pd
 
 
-
 # Data Collection
 def collect_data(
         csv_path: str,
