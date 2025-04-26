@@ -74,7 +74,8 @@ fi
 
 # Step 5: Run Django migrations
 if [ -f "manage.py" ]; then
-    python manage.py migrate
+    python3 manage.py migrate
+    python3 manage.py collectstatic
 fi
 
 # Step 6: Run nginx
@@ -101,13 +102,13 @@ sudo apt install -y certbot python3-certbot-nginx
 # Launch certbot to configure SSL automatically
 sudo certbot --nginx -d testgitreport.duckdns.org
 
-# Step 9: Run Gunicorn as a background service
+# Step 9: Kill previous Gunicorn and runserver processes if they exist
+echo "Stopping any previous Gunicorn or Django runserver processes..."
+pkill -f "gunicorn myproject.wsgi"
+pkill -f "manage.py runserver"
 
-# Get current directory (full path)
-CURRENT_DIR="$(pwd)"
-
-# Define the socket path inside current dir
-GUNICORN_SOCKET="$CURRENT_DIR/gunicorn.sock"
+# Step 10: Choose to start Gunicorn or runserver
+GUNICORN_SOCKET="/home/lechatdoux1987/git_log_viz/myproject/gunicorn.sock"
 
 read -p "Do you want to start Gunicorn instead of runserver? (y/n): " start_gunicorn
 if [ "$start_gunicorn" == "y" ]; then
@@ -117,6 +118,10 @@ if [ "$start_gunicorn" == "y" ]; then
         --workers 3 \
         --daemon
     echo "Gunicorn started."
+else
+    echo "Starting Django runserver in daemon mode..."
+    nohup bash -c 'python3 manage.py runserver' &> /dev/null &
+    echo "Runserver started."
 fi
 
 echo "Deployment complete"

@@ -54,7 +54,9 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "myproject.urls"
 
-CSRF_TRUSTED_ORIGINS = ['https://gitreport.duckdns.org']
+CSRF_TRUSTED_ORIGINS = [
+    'https://gitreport.duckdns.org',
+    'https://testgitreport.duckdns.org',]
 
 TEMPLATES = [
     {
@@ -131,3 +133,6 @@ LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = '/'
 
 LOGOUT_REDIRECT_URL = '/'
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
