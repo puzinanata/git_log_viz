@@ -48,7 +48,7 @@ else
     git pull
 fi
 
-# Step 2: Set up virtual environment
+# Step 2: Set up and activation virtual environment
 VENV_NAME="venv"
 if [ ! -d "$VENV_NAME" ]; then
     python3 -m venv "$VENV_NAME"
@@ -59,16 +59,17 @@ source "$VENV_NAME/bin/activate"
 echo "Virtual environment activated."
 
 # Step 3: Install requirements
-cd deployment_vm/
-if [ -f "requirements.txt" ]; then
-    pip install -r requirements.txt
+if [ -f "deployment_vm/requirements.txt" ]; then
+    echo "Installing Python dependencies from requirements.txt..."
+    pip install -r deployment_vm/requirements.txt
+    echo "Dependencies installed successfully."
 else
-    echo "requirements.txt not found!"
+    echo "requirements.txt not found in deployment_vm/!"
 fi
 
 # Step 4: Add venv to .gitignore
-if ! grep -q "$VENV_NAME/" .gitignore 2>/dev/null; then
-    echo "$VENV_NAME/" >> .gitignore
+if ! grep -q "$VENV_NAME/" myproject/.gitignore 2>/dev/null; then
+    echo "$VENV_NAME/" >> myproject/.gitignore
 fi
 
 # Step 5: Run Django migrations
@@ -76,16 +77,9 @@ if [ -f "manage.py" ]; then
     python manage.py migrate
 fi
 
-# Step 6: Install and configure Nginx
-if ! command -v nginx &> /dev/null; then
-    echo "Installing Nginx..."
-    sudo apt install -y nginx
-fi
-
-# Step 7: Link your custom nginx conf
-GUNICORN_SOCKET="/run/gunicorn.sock"
-GITREPORT_CONF="gitreport.conf"
-NGINX_CONF_SRC="$(pwd)/$GITREPORT_CONF"
+# Step 6: Run nginx
+GITREPORT_CONF="../deployment_vm/gitreport.conf"
+NGINX_CONF_SRC="$(realpath "$GITREPORT_CONF")"
 NGINX_CONF_DEST="/etc/nginx/sites-available/gitreport"
 NGINX_ENABLED="/etc/nginx/sites-enabled/gitreport"
 
@@ -98,11 +92,17 @@ else
     echo "nginx config $GITREPORT_CONF not found!"
 fi
 
-# Step 8: (Optional) SSL setup with Certbot – run manually if needed
+# Test and reload nginx
+sudo nginx -t && sudo systemctl reload nginx
+
+# Now install certbot and request HTTPS certificate
 sudo apt install -y certbot python3-certbot-nginx
+
+# Launch certbot to configure SSL automatically
 sudo certbot --nginx -d gitreport.duckdns.org
 
 # Step 9: Run Gunicorn as a background service
+GUNICORN_SOCKET="/run/gunicorn.sock"
 read -p "Do you want to start Gunicorn instead of runserver? (y/n): " start_gunicorn
 if [ "$start_gunicorn" == "y" ]; then
     echo "Starting Gunicorn using socket $GUNICORN_SOCKET..."
