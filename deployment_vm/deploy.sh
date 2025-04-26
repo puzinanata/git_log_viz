@@ -99,7 +99,7 @@ sudo nginx -t && sudo systemctl reload nginx
 sudo apt install -y certbot python3-certbot-nginx
 
 # Launch certbot to configure SSL automatically
-sudo certbot --nginx -d gitreport.duckdns.org
+sudo certbot --nginx -d testgitreport.duckdns.org
 
 # Step 9: Run Gunicorn as a background service
 GUNICORN_SOCKET="/run/gunicorn.sock"
