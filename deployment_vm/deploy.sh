@@ -1,26 +1,55 @@
 #!/bin/bash
+# Deployment on Ubuntu/Debian VM
 
-# Define project path
-PROJECT_PATH="git_log_viz/myproject/deployment_vm"
-VENV_NAME="venv"
-GUNICORN_SOCKET="/run/gunicorn.sock"
-GITREPORT_CONF="gitreport.conf"
+# Stop script if any command fails
+set -e
+# Turn off exit mode
+#set +e
 
-# Step 0: Create project folder
-echo "Checking project directory..."
-mkdir -p "$PROJECT_PATH"
-echo "Directory '$PROJECT_PATH' is ready."
+# Turn on debugging mode
+set -x
+# Turn off debugging mode
+#set +x
 
-cd "$PROJECT_PATH" || exit 1
+# Step 0: Install required packages
+set +e
+REQUIRED_PACKAGES=(
+    git
+    nginx
+    python3
+    python3-pip
+    python3-venv
+)
 
-# Step 1: Install Python if needed
-if ! command -v python3 &> /dev/null; then
-    echo "Installing Python3..."
-    sudo apt update
-    sudo apt install -y python3 python3-pip python3-venv
+sudo apt update
+
+for package in "${REQUIRED_PACKAGES[@]}"; do
+    echo "Installing $package..."
+    if sudo apt install -y "$package"; then
+        echo "$package installed successfully"
+    else
+        echo "Failed to install $package"
+    fi
+done
+
+echo "All required packages installed!"
+set -e
+
+
+# Step 1: Pull or clone my project
+REPO_URL="https://github.com/puzinanata/git_log_viz"
+PROJECT_PATH="git_log_viz/"
+
+if [ ! -d "$PROJECT_PATH" ]; then
+    git clone "$REPO_URL" "$PROJECT_PATH"
+    cd "$PROJECT_PATH"
+else
+    cd "$PROJECT_PATH"
+    git pull
 fi
 
 # Step 2: Set up virtual environment
+VENV_NAME="venv"
 if [ ! -d "$VENV_NAME" ]; then
     python3 -m venv "$VENV_NAME"
     echo "Virtual environment '$VENV_NAME' created."
@@ -29,8 +58,8 @@ fi
 source "$VENV_NAME/bin/activate"
 echo "Virtual environment activated."
 
-# Step 3: Upgrade pip and install requirements
-pip install --upgrade pip
+# Step 3: Install requirements
+cd deployment_vm/
 if [ -f "requirements.txt" ]; then
     pip install -r requirements.txt
 else
@@ -54,6 +83,8 @@ if ! command -v nginx &> /dev/null; then
 fi
 
 # Step 7: Link your custom nginx conf
+GUNICORN_SOCKET="/run/gunicorn.sock"
+GITREPORT_CONF="gitreport.conf"
 NGINX_CONF_SRC="$(pwd)/$GITREPORT_CONF"
 NGINX_CONF_DEST="/etc/nginx/sites-available/gitreport"
 NGINX_ENABLED="/etc/nginx/sites-enabled/gitreport"
