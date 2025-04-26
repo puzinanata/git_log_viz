@@ -102,7 +102,13 @@ sudo apt install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d testgitreport.duckdns.org
 
 # Step 9: Run Gunicorn as a background service
-GUNICORN_SOCKET="/run/gunicorn.sock"
+
+# Get current directory (full path)
+CURRENT_DIR="$(pwd)"
+
+# Define the socket path inside current dir
+GUNICORN_SOCKET="$CURRENT_DIR/gunicorn.sock"
+
 read -p "Do you want to start Gunicorn instead of runserver? (y/n): " start_gunicorn
 if [ "$start_gunicorn" == "y" ]; then
     echo "Starting Gunicorn using socket $GUNICORN_SOCKET..."
