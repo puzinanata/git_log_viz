@@ -15,7 +15,7 @@ set -x
 
 # Define global variables
 VENV_NAME="venv"
-PROJECT_DIR="$HOME/git_log_viz/myproject"
+PROJECT_DIR="git_log_viz/myproject"
 
 # Function to activate virtual environment
 activate_venv() {
