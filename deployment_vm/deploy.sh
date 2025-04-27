@@ -105,10 +105,10 @@ sudo nginx -t && sudo systemctl reload nginx
 #sudo certbot --nginx -d testgitreport.duckdns.org
 
 # Step 9: Kill previous Gunicorn and runserver processes if they exist
-echo "Stopping any previous Gunicorn or Django runserver processes..."
+#echo "Stopping any previous Gunicorn or Django runserver processes..."
 #pkill -f "gunicorn myproject.wsgi"
-pkill -f "manage.py runserver"
-sleep 2
+#pkill -f "manage.py runserver"
+#sleep 2
 # Step 10: Choose to start Gunicorn or runserver
 #GUNICORN_SOCKET="/home/lechatdoux1987/git_log_viz/myproject/gunicorn.sock"
 #
