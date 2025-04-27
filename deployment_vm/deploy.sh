@@ -13,6 +13,21 @@ set -x
 # Turn off debugging mode
 #set +x
 
+# Define VENV_NAME globally
+VENV_NAME="venv"
+
+# Function to activate virtual environment
+activate_venv() {
+    if [ ! -d "$VENV_NAME" ]; then
+        python3 -m venv "$VENV_NAME"
+        echo "Virtual environment '$VENV_NAME' created."
+    fi
+
+    # Activate the virtual environment
+    source "$VENV_NAME/bin/activate"
+    echo "Virtual environment activated."
+}
+
 # Step 0: Install required packages
 set +e
 REQUIRED_PACKAGES=(
@@ -51,14 +66,7 @@ else
 fi
 
 # Step 2: Set up and activation virtual environment
-VENV_NAME="venv"
-if [ ! -d "$VENV_NAME" ]; then
-    python3 -m venv "$VENV_NAME"
-    echo "Virtual environment '$VENV_NAME' created."
-fi
-
-source "$VENV_NAME/bin/activate"
-echo "Virtual environment activated."
+activate_venv
 
 # Step 3: Install requirements
 if [ -f "deployment_vm/requirements.txt" ]; then
@@ -75,9 +83,23 @@ if ! grep -q "$VENV_NAME/" myproject/.gitignore 2>/dev/null; then
 fi
 
 # Step 5: Run Django migrations
-if [ -f "manage.py" ]; then
-    "$VENV_NAME/bin/python" manage.py migrate
-    "$VENV_NAME/bin/python" manage.py collectstatic --noinput
+PROJECT_DIR="git_log_viz/myproject"  # Set correct project directory
+if [ -f "$PROJECT_DIR/manage.py" ]; then
+    echo "Navigating to the project directory..."
+    cd ~/$PROJECT_DIR  # Navigate to the correct folder
+
+    # Ensure venv is activated
+    activate_venv
+
+    echo "Running migrations..."
+    python manage.py migrate
+
+    echo "Collecting static files..."
+    python manage.py collectstatic --noinput
+
+    echo "Migrations and static files collection completed."
+else
+    echo "manage.py not found, ensure you're in the correct project directory."
 fi
 
 # Step 6: Run nginx
@@ -122,9 +144,9 @@ sudo nginx -t && sudo systemctl reload nginx
 #    echo "Gunicorn started."
 #else
 echo "Starting Django runserver in daemon mode..."
-cd ~/git_log_viz
-source "$VENV_NAME/bin/activate"
-nohup "$VENV_NAME/bin/python" manage.py runserver 127.0.0.1:8000 > runserver.log 2>&1 &
+cd ~/git_log_viz  # Ensure correct directory
+activate_venv  # Re-activate the virtual environment
+nohup python manage.py runserver 127.0.0.1:8000 > runserver.log 2>&1 &
 echo "Runserver started."
 #fi
 
