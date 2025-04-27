@@ -138,7 +138,7 @@ sudo nginx -t && sudo systemctl reload nginx
 #else
 echo "Starting Django runserver in daemon mode..."
 cd ~/$PROJECT_DIR  # Ensure correct directory
-source "$VENV_NAME/bin/activate"  # Re-activate the virtual environment here
+activate_venv
 nohup python3 manage.py runserver 127.0.0.1:8000 > runserver.log 2>&1 &
 echo "Runserver started."
 #fi
