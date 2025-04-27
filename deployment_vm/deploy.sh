@@ -108,7 +108,7 @@ sudo nginx -t && sudo systemctl reload nginx
 echo "Stopping any previous Gunicorn or Django runserver processes..."
 #pkill -f "gunicorn myproject.wsgi"
 pkill -f "manage.py runserver"
-
+sleep 2
 # Step 10: Choose to start Gunicorn or runserver
 #GUNICORN_SOCKET="/home/lechatdoux1987/git_log_viz/myproject/gunicorn.sock"
 #
@@ -122,7 +122,8 @@ pkill -f "manage.py runserver"
 #    echo "Gunicorn started."
 #else
 echo "Starting Django runserver in daemon mode..."
-nohup bash -c 'python3 manage.py runserver 127.0.0.1:8000' &> /dev/null &
+cd ~/git_log_viz
+nohup python3 manage.py runserver 127.0.0.1:8000 &> /dev/null &
 echo "Runserver started."
 #fi
 
