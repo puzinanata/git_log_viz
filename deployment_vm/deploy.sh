@@ -1,6 +1,8 @@
 #!/bin/bash
 # Deployment on Ubuntu/Debian VM
 
+# Come back to root directory
+cd
 # Stop script if any command fails
 set -e
 # Turn off exit mode
@@ -79,10 +81,10 @@ if [ -f "manage.py" ]; then
 fi
 
 # Step 6: Run nginx
-GITREPORT_CONF="../deployment_vm/gitreport.conf"
+GITREPORT_CONF="../deployment_vm/testgitreport.conf"
 NGINX_CONF_SRC="$(realpath "$GITREPORT_CONF")"
-NGINX_CONF_DEST="/etc/nginx/sites-available/gitreport"
-NGINX_ENABLED="/etc/nginx/sites-enabled/gitreport"
+NGINX_CONF_DEST="/etc/nginx/sites-available/testgitreport"
+NGINX_ENABLED="/etc/nginx/sites-enabled/testgitreport"
 
 if [ -f "$NGINX_CONF_SRC" ]; then
     sudo cp "$NGINX_CONF_SRC" "$NGINX_CONF_DEST"
@@ -96,32 +98,32 @@ fi
 # Test and reload nginx
 sudo nginx -t && sudo systemctl reload nginx
 
-# Now install certbot and request HTTPS certificate
-sudo apt install -y certbot python3-certbot-nginx
-
-# Launch certbot to configure SSL automatically
-sudo certbot --nginx -d testgitreport.duckdns.org
+## Now install certbot and request HTTPS certificate
+#sudo apt install -y certbot python3-certbot-nginx
+#
+## Launch certbot to configure SSL automatically
+#sudo certbot --nginx -d testgitreport.duckdns.org
 
 # Step 9: Kill previous Gunicorn and runserver processes if they exist
 echo "Stopping any previous Gunicorn or Django runserver processes..."
-pkill -f "gunicorn myproject.wsgi"
+#pkill -f "gunicorn myproject.wsgi"
 pkill -f "manage.py runserver"
 
 # Step 10: Choose to start Gunicorn or runserver
-GUNICORN_SOCKET="/home/lechatdoux1987/git_log_viz/myproject/gunicorn.sock"
-
-read -p "Do you want to start Gunicorn instead of runserver? (y/n): " start_gunicorn
-if [ "$start_gunicorn" == "y" ]; then
-    echo "Starting Gunicorn using socket $GUNICORN_SOCKET..."
-    gunicorn myproject.wsgi:application \
-        --bind unix:$GUNICORN_SOCKET \
-        --workers 3 \
-        --daemon
-    echo "Gunicorn started."
-else
-    echo "Starting Django runserver in daemon mode..."
-    nohup bash -c 'python3 manage.py runserver' &> /dev/null &
-    echo "Runserver started."
-fi
+#GUNICORN_SOCKET="/home/lechatdoux1987/git_log_viz/myproject/gunicorn.sock"
+#
+#read -p "Do you want to start Gunicorn instead of runserver? (y/n): " start_gunicorn
+#if [ "$start_gunicorn" == "y" ]; then
+#    echo "Starting Gunicorn using socket $GUNICORN_SOCKET..."
+#    gunicorn myproject.wsgi:application \
+#        --bind unix:$GUNICORN_SOCKET \
+#        --workers 3 \
+#        --daemon
+#    echo "Gunicorn started."
+#else
+echo "Starting Django runserver in daemon mode..."
+nohup bash -c 'python3 manage.py runserver 127.0.0.1:8000' &> /dev/null &
+echo "Runserver started."
+#fi
 
 echo "Deployment complete"
