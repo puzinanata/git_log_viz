@@ -77,7 +77,7 @@ fi
 # Step 5: Run Django migrations
 if [ -f "manage.py" ]; then
     python3 manage.py migrate
-    python3 manage.py collectstatic
+    python3 manage.py collectstatic --noinput
 fi
 
 # Step 6: Run nginx
@@ -123,7 +123,7 @@ sudo nginx -t && sudo systemctl reload nginx
 #else
 echo "Starting Django runserver in daemon mode..."
 cd ~/git_log_viz
-nohup python3 manage.py runserver 127.0.0.1:8000 &> /dev/null &
+nohup "$VENV_DIR/bin/python" manage.py runserver 127.0.0.1:8000 > runserver.log 2>&1 &
 echo "Runserver started."
 #fi
 
