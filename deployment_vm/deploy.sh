@@ -21,6 +21,10 @@ PROJECT_DIR="git_log_viz/myproject"
 activate_venv() {
     if [ ! -d "$VENV_NAME" ]; then
         python3 -m venv "$VENV_NAME"
+        if [ ! -d "$VENV_NAME" ]; then
+            echo "Error: Virtual environment not created successfully."
+            exit 1
+        fi
         echo "Virtual environment '$VENV_NAME' created."
     fi
 
@@ -67,10 +71,11 @@ else
 fi
 
 # Step 2: Set up and activation virtual environment
+cd "$PROJECT_DIR"
 activate_venv
 
 # Step 3: Install requirements
-if [ -f "deployment_vm/requirements.txt" ]; then
+if [ -f "../deployment_vm/requirements.txt" ]; then
     echo "Installing Python dependencies from requirements.txt..."
     pip install -r deployment_vm/requirements.txt
     echo "Dependencies installed successfully."
@@ -79,6 +84,7 @@ else
 fi
 
 # Step 4: Add venv to .gitignore
+cd "$PROJECT_DIR"
 if ! grep -q "$VENV_NAME/" myproject/.gitignore 2>/dev/null; then
     echo "$VENV_NAME/" >> myproject/.gitignore
 fi
