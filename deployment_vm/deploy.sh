@@ -15,7 +15,6 @@ set -x
 
 # Define global variables
 VENV_NAME="venv"
-PROJECT_DIR="git_log_viz/myproject"
 
 # Function to activate virtual environment
 activate_venv() {
@@ -88,10 +87,10 @@ if ! grep -q "$VENV_NAME/" myproject/.gitignore 2>/dev/null; then
 fi
 
 # Step 5: Run Django migrations
-if [ -f "manage.py" ]; then
-    echo "Navigating to the project directory..."
-    cd "$PROJECT_DIR"  # Navigate to the correct folder
+echo "Navigating to the project directory..."
+cd myproject/
 
+if [ -f "manage.py" ]; then
     echo "Running migrations and collecting static files..."
     python3 manage.py migrate
     python3 manage.py collectstatic --noinput
@@ -99,8 +98,9 @@ if [ -f "manage.py" ]; then
 else
     echo "manage.py not found, ensure you're in the correct project directory."
 fi
+
 # Step 6: Run nginx
-GITREPORT_CONF="deployment_vm/testgitreport.conf"
+GITREPORT_CONF="../deployment_vm/testgitreport.conf"
 NGINX_CONF_SRC="$(realpath "$GITREPORT_CONF")"
 NGINX_CONF_DEST="/etc/nginx/sites-available/testgitreport"
 NGINX_ENABLED="/etc/nginx/sites-enabled/testgitreport"
@@ -141,9 +141,7 @@ sudo nginx -t && sudo systemctl reload nginx
 #    echo "Gunicorn started."
 #else
 echo "Starting Django runserver in daemon mode..."
-cd ~/$PROJECT_DIR  # Ensure correct directory
-activate_venv
-nohup python3 manage.py runserver 127.0.0.1:8000 > runserver.log 2>&1 &
+nohup python3 manage.py runserver &> /dev/null &
 echo "Runserver started."
 #fi
 
