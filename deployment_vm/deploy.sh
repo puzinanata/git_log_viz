@@ -81,7 +81,7 @@ if [ -f "manage.py" ]; then
 fi
 
 # Step 6: Run nginx
-GITREPORT_CONF="../deployment_vm/testgitreport.conf"
+GITREPORT_CONF="deployment_vm/testgitreport.conf"
 NGINX_CONF_SRC="$(realpath "$GITREPORT_CONF")"
 NGINX_CONF_DEST="/etc/nginx/sites-available/testgitreport"
 NGINX_ENABLED="/etc/nginx/sites-enabled/testgitreport"
