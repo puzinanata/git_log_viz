@@ -15,7 +15,7 @@ set -x
 
 # Define global variables
 VENV_NAME="venv"
-PROJECT_DIR="git_log_viz/myproject"
+PROJECT_DIR="$HOME/git_log_viz/myproject"
 
 # Function to activate virtual environment
 activate_venv() {
@@ -71,11 +71,10 @@ else
 fi
 
 # Step 2: Set up and activation virtual environment
-cd "$PROJECT_DIR"
 activate_venv
 
 # Step 3: Install requirements
-if [ -f "../deployment_vm/requirements.txt" ]; then
+if [ -f "deployment_vm/requirements.txt" ]; then
     echo "Installing Python dependencies from requirements.txt..."
     pip install -r deployment_vm/requirements.txt
     echo "Dependencies installed successfully."
@@ -84,7 +83,6 @@ else
 fi
 
 # Step 4: Add venv to .gitignore
-cd "$PROJECT_DIR"
 if ! grep -q "$VENV_NAME/" myproject/.gitignore 2>/dev/null; then
     echo "$VENV_NAME/" >> myproject/.gitignore
 fi
