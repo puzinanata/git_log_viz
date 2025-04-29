@@ -6,6 +6,8 @@ from src import graph
 from src import prep_data
 from src import collect
 
+result_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "result")
+os.makedirs(result_dir, exist_ok=True)
 
 def html_report(settings):
 

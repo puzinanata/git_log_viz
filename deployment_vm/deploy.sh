@@ -75,8 +75,10 @@ activate_venv
 # Step 3:
 echo "Creating directory for Git repositories: /var/lib/git_repos"
 sudo mkdir -p "/var/lib/git_repos"
+sudo chown "$USER":"$USER" "/var/lib/git_repos"
+sudo chmod 755 "/var/lib/git_repos"
 
-# Step 3: Install requirements
+# Step 4: Install requirements
 if [ -f "deployment_vm/requirements.txt" ]; then
     echo "Installing Python dependencies from requirements.txt..."
     pip install -r deployment_vm/requirements.txt
@@ -85,12 +87,12 @@ else
     echo "requirements.txt not found in deployment_vm/!"
 fi
 
-# Step 4: Add venv to .gitignore
+# Step 5: Add venv to .gitignore
 if ! grep -q "$VENV_NAME/" myproject/.gitignore 2>/dev/null; then
     echo "$VENV_NAME/" >> myproject/.gitignore
 fi
 
-# Step 5: Run Django migrations
+# Step 6: Run Django migrations
 echo "Navigating to the project directory..."
 cd myproject/
 
@@ -103,7 +105,7 @@ else
     echo "manage.py not found, ensure you're in the correct project directory."
 fi
 
-# Step 6: Run nginx
+# Step 7: Run nginx
 GITREPORT_CONF="../deployment_vm/testgitreport.conf"
 NGINX_CONF_SRC="$(realpath "$GITREPORT_CONF")"
 NGINX_CONF_DEST="/etc/nginx/sites-available/testgitreport"
