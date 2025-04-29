@@ -72,6 +72,10 @@ fi
 # Step 2: Set up and activation virtual environment
 activate_venv
 
+# Step 3:
+echo "Creating directory for Git repositories: /var/lib/git_repos"
+sudo mkdir -p "/var/lib/git_repos"
+
 # Step 3: Install requirements
 if [ -f "deployment_vm/requirements.txt" ]; then
     echo "Installing Python dependencies from requirements.txt..."
