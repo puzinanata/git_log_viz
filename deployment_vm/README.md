@@ -5,3 +5,5 @@ cd git_log_viz/deployment_vm/
 
 bash deploy.sh
 
+After deployment test site will be available here: 
+http://testgitreport.duckdns.org/
