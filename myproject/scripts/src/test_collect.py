@@ -2,7 +2,7 @@ import unittest
 from collect import collect_data
 
 
-class TestCollectData(unittest.TestCase):
+class test_collect_data(unittest.TestCase):
     def test_collect_data_real_repo(self):
         test_repo_path = "/var/lib/git_repos/test"
         test_csv_path = "result/git_log_test.csv"
