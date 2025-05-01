@@ -13,7 +13,7 @@ def process_data(
     df = pd.read_csv(result_path)
 
     # Transform data to datetime format
-    df["date"] = pd.to_datetime(df["date"], utc=True)
+    df["date"] = pd.to_datetime(df["date"], format="%a %b %d %H:%M:%S %Y %z", utc=True)
 
     # Creation new attributes in df
     df["year"] = df["date"].dt.year
