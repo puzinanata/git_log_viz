@@ -105,29 +105,50 @@ else
     echo "manage.py not found, ensure you're in the correct project directory."
 fi
 
-# Step 7: Run nginx
-GITREPORT_CONF="../deployment_vm/testgitreport.conf"
-NGINX_CONF_SRC="$(realpath "$GITREPORT_CONF")"
-NGINX_CONF_DEST="/etc/nginx/sites-available/testgitreport"
-NGINX_ENABLED="/etc/nginx/sites-enabled/testgitreport"
+# Step 7: Configure Nginx
+GITREPORT_CONF="../deployment_vm/gitreport.conf"
+NGINX_CONF_DEST="/etc/nginx/sites-available/gitreport"
+NGINX_ENABLED="/etc/nginx/sites-enabled/gitreport"
 
-if [ -f "$NGINX_CONF_SRC" ]; then
-    sudo cp "$NGINX_CONF_SRC" "$NGINX_CONF_DEST"
+if [ -f "$GITREPORT_CONF" ]; then
+    sudo cp "$GITREPORT_CONF" "$NGINX_CONF_DEST"
     sudo ln -sf "$NGINX_CONF_DEST" "$NGINX_ENABLED"
+    sudo rm -f /etc/nginx/sites-enabled/default
     sudo nginx -t && sudo systemctl reload nginx
     echo "Nginx configured with $GITREPORT_CONF"
 else
     echo "nginx config $GITREPORT_CONF not found!"
 fi
 
-# Test and reload nginx
-sudo nginx -t && sudo systemctl reload nginx
+# Step 8: Start Gunicorn using Unix socket
+echo "Starting Gunicorn with Unix socket..."
+
+# Ensure old Gunicorn is not running
+pkill -f "gunicorn myproject.wsgi" || true
+
+# Set socket path
+SOCKET_PATH="/home/puzinanata/git_log_viz/myproject/gunicorn.sock"
+
+# Remove old socket if exists
+rm -f "$SOCKET_PATH"
+
+# Run Gunicorn
+gunicorn myproject.wsgi:application \
+    --bind unix:$SOCKET_PATH \
+    --workers 3 \
+    --daemon
+
+# Ensure correct permissions for Nginx to access the socket
+chmod 666 "$SOCKET_PATH"
+
+echo "Gunicorn started using socket $SOCKET_PATH"
+echo "Deployment complete"
 
 ## Now install certbot and request HTTPS certificate
 #sudo apt install -y certbot python3-certbot-nginx
 #
 ## Launch certbot to configure SSL automatically
-#sudo certbot --nginx -d testgitreport.duckdns.org
+#sudo certbot --nginx -d gitreport.duckdns.org
 
 # Step 9: Kill previous Gunicorn and runserver processes if they exist
 #echo "Stopping any previous Gunicorn or Django runserver processes..."
@@ -146,9 +167,9 @@ sudo nginx -t && sudo systemctl reload nginx
 #        --daemon
 #    echo "Gunicorn started."
 #else
-echo "Starting Django runserver in daemon mode..."
-nohup python3 manage.py runserver &> /dev/null &
-echo "Runserver started."
-#fi
-
-echo "Deployment complete"
+#echo "Starting Django runserver in daemon mode..."
+#nohup python3 manage.py runserver &> /dev/null &
+#echo "Runserver started."
+##fi
+#
+#echo "Deployment complete"
