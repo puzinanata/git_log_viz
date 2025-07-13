@@ -34,24 +34,15 @@ activate_venv() {
 
 # Step 0: Install required packages
 set +e
-REQUIRED_PACKAGES=(
-    git
+REQUIRED_PACKAGES="git
     nginx
     python3
     python3-pip
-    python3-venv
-)
+    python3-venv"
 
-sudo apt update
+apt update
 
-for package in "${REQUIRED_PACKAGES[@]}"; do
-    echo "Installing $package..."
-    if sudo apt install -y "$package"; then
-        echo "$package installed successfully"
-    else
-        echo "Failed to install $package"
-    fi
-done
+DEBIAN_FRONTEND=noninteractive apt install -y $REQUIRED_PACKAGES
 
 echo "All required packages installed!"
 set -e
@@ -74,9 +65,9 @@ activate_venv
 
 # Step 3:
 echo "Creating directory for Git repositories: /var/lib/git_repos"
-sudo mkdir -p "/var/lib/git_repos"
-sudo chown "$USER":"$USER" "/var/lib/git_repos"
-sudo chmod 755 "/var/lib/git_repos"
+mkdir -p "/var/lib/git_repos"
+chown "$USER":"$USER" "/var/lib/git_repos"
+chmod 755 "/var/lib/git_repos"
 
 # Step 4: Install requirements
 if [ -f "deployment_vm/requirements.txt" ]; then
@@ -110,66 +101,15 @@ GITREPORT_CONF="../deployment_vm/gitreport.conf"
 NGINX_CONF_DEST="/etc/nginx/sites-available/gitreport"
 NGINX_ENABLED="/etc/nginx/sites-enabled/gitreport"
 
-if [ -f "$GITREPORT_CONF" ]; then
-    sudo cp "$GITREPORT_CONF" "$NGINX_CONF_DEST"
-    sudo ln -sf "$NGINX_CONF_DEST" "$NGINX_ENABLED"
-    sudo rm -f /etc/nginx/sites-enabled/default
-    sudo nginx -t && sudo systemctl reload nginx
-    echo "Nginx configured with $GITREPORT_CONF"
-else
-    echo "nginx config $GITREPORT_CONF not found!"
-fi
 
-# Step 8: Start Gunicorn using Unix socket
-echo "Starting Gunicorn with Unix socket..."
+cp "$GITREPORT_CONF" "$NGINX_CONF_DEST"
+ln -sf "$NGINX_CONF_DEST" "$NGINX_ENABLED"
+rm -f /etc/nginx/sites-enabled/default
+nginx
 
-# Ensure old Gunicorn is not running
-pkill -f "gunicorn myproject.wsgi" || true
 
-# Set socket path
-SOCKET_PATH="/home/puzinanata/git_log_viz/myproject/gunicorn.sock"
+echo "Starting Django runserver in daemon mode..."
+python3 manage.py runserver &> /dev/null &
+echo "Runserver started."
 
-# Remove old socket if exists
-rm -f "$SOCKET_PATH"
-
-# Run Gunicorn
-gunicorn myproject.wsgi:application \
-    --bind unix:$SOCKET_PATH \
-    --workers 3 \
-    --daemon
-
-# Ensure correct permissions for Nginx to access the socket
-chmod 666 "$SOCKET_PATH"
-
-echo "Gunicorn started using socket $SOCKET_PATH"
 echo "Deployment complete"
-
-## Now install certbot and request HTTPS certificate
-#sudo apt install -y certbot python3-certbot-nginx
-#
-## Launch certbot to configure SSL automatically
-#sudo certbot --nginx -d gitreport.duckdns.org
-
-# Step 9: Kill previous Gunicorn and runserver processes if they exist
-#echo "Stopping any previous Gunicorn or Django runserver processes..."
-#pkill -f "gunicorn myproject.wsgi"
-#pkill -f "manage.py runserver"
-#sleep 2
-# Step 10: Choose to start Gunicorn or runserver
-#GUNICORN_SOCKET="/home/lechatdoux1987/git_log_viz/myproject/gunicorn.sock"
-#
-#read -p "Do you want to start Gunicorn instead of runserver? (y/n): " start_gunicorn
-#if [ "$start_gunicorn" == "y" ]; then
-#    echo "Starting Gunicorn using socket $GUNICORN_SOCKET..."
-#    gunicorn myproject.wsgi:application \
-#        --bind unix:$GUNICORN_SOCKET \
-#        --workers 3 \
-#        --daemon
-#    echo "Gunicorn started."
-#else
-#echo "Starting Django runserver in daemon mode..."
-#nohup python3 manage.py runserver &> /dev/null &
-#echo "Runserver started."
-##fi
-#
-#echo "Deployment complete"
