@@ -107,9 +107,5 @@ ln -sf "$NGINX_CONF_DEST" "$NGINX_ENABLED"
 rm -f /etc/nginx/sites-enabled/default
 nginx
 
-
 echo "Starting Django runserver in daemon mode..."
-python3 manage.py runserver &> /dev/null &
-echo "Runserver started."
-
-echo "Deployment complete"
+python3 manage.py runserver
