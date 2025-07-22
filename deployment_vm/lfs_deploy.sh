@@ -30,7 +30,7 @@ chown "$USER":"$USER" "/var/lib/git_repos"
 chmod 755 "/var/lib/git_repos"
 
 # Step 4: Install requirements
-pip install -r deployment_vm/requirements.txt
+pip3 -v install -r deployment_vm/requirements.txt
 echo "Dependencies installed successfully."
 
 # Step 5: Add venv to .gitignore
