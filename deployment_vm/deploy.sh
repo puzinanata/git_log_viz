@@ -71,8 +71,9 @@ NGINX_ENABLED="/etc/nginx/sites-enabled/gitreport"
 
 cp "$GITREPORT_CONF" "$NGINX_CONF_DEST"
 ln -sf "$NGINX_CONF_DEST" "$NGINX_ENABLED"
-rm -f /etc/nginx/sites-enabled/default
-nginx
 
 echo "Starting Django runserver..."
-python3 manage.py runserver
+nohup python3 manage.py runserver &
+
+rm -f /etc/nginx/sites-enabled/default
+nginx -g "daemon off;"
