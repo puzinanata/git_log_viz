@@ -1,22 +1,10 @@
 #!/bin/bash
-
-# Remove existing database file if it exists
-if [ -f "db.sqlite3" ]; then
-    echo "Removing old database..."
-    rm db.sqlite3
-fi
-
-# Run migrations to create a fresh database
-echo "Running migrations..."
-python3 manage.py migrate
-
 # Prompt for the superuser password securely
 echo -n "Enter password for the superuser: "
 read -s superuser_password
 echo
 
 echo "Creating superuser..."
-
 python3 manage.py shell <<EOF
 from django.contrib.auth.models import User
 
