@@ -55,8 +55,9 @@ MIDDLEWARE = [
 ROOT_URLCONF = "myproject.urls"
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://gitreport.duckdns.org',
-    'https://testgitreport.duckdns.org',]
+'https://gitreport.duckdns.org',
+'https://testgitreport.duckdns.org',
+]
 
 TEMPLATES = [
     {
