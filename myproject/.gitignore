@@ -1,8 +1,11 @@
-git_repos/*
-../.idea
-.DS_Store
-notes
-myproject/result/*
-myproject/report_app/templates/report_app/report.html
-myproject/db.sqlite3
+git_repos/
+notes/
+result/
+report_app/templates/report_app/report.html
+db.sqlite3
 
+.DS_Store
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.sqlite3

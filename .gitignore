@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# JetBrains / PyCharm
+.idea/
+*.iml
+
+# Python cache at repo root
+__pycache__/
+*.py[cod]
+.pytest_cache/
