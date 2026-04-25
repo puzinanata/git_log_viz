@@ -14,7 +14,9 @@ def collect_data(
     command = "git log --pretty=format:'%H %ad %ae' --stat --no-merges"
     command_last_commit = "git log -1 --pretty=format:'%H' --no-merges"
     # Command to update local git repo
-    command_pull = "git pull &> /dev/null"
+    # command_pull = "git pull &> /dev/null"
+    command_pull = "git pull --ff-only"
+
 
     # Dictionary to store the log data for each repository
     repo_logs = {}  # dict to keep full repo

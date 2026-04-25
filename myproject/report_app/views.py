@@ -109,7 +109,7 @@ def generate_report(request):
         repo_list = [repo.strip() for repo in request.POST.getlist("repo") if repo.strip()]
         repo_count = int(request.POST.get("repo_count", 1))
         start_year = int(request.POST.get("start_year", 1900))
-        finish_year = int(request.POST.get("finish_year", 2025))
+        finish_year = int(request.POST.get("finish_year", 2026))
         num_top = int(request.POST.get("num_top", 10))
         author_type = request.POST.get("author", "").strip()
         excl_list = [x.strip() for x in request.POST.get("exclude_username", "").split(",") if
@@ -155,20 +155,23 @@ def generate_report(request):
         )
 
         # If a previous report exists, return its content
-        if previous_report:
-            print("Previous report found — returning cached version")
-            # Return the previous report content
-            response = JsonResponse({"report_content": previous_report.report_content}, status=200)
+        # if previous_report:
+        #     print("Previous report found — returning cached version")
+        #     # Return the previous report content
+        #     response = JsonResponse({"report_content": previous_report.report_content}, status=200)
 
-            # Now, delete all reports with the same hash, excluding the newly created one
-            with transaction.atomic():
-                existing_reports = Report.objects.filter(report_name=report_name).exclude(id=new_report.id)
-                existing_reports.delete()  # Delete previous reports
+        #     # Now, delete all reports with the same hash, excluding the newly created one
+        #     with transaction.atomic():
+        #         existing_reports = Report.objects.filter(report_name=report_name).exclude(id=new_report.id)
+        #         existing_reports.delete()  # Delete previous reports
 
-        else:
-            print("No previous report found — returning newly generated report")
-            # Return the newly generated report content
-            response = JsonResponse({"report_content": new_report.report_content}, status=200)
+        # else:
+        #     print("No previous report found — returning newly generated report")
+        #     # Return the newly generated report content
+        #     response = JsonResponse({"report_content": new_report.report_content}, status=200)
+
+        Report.objects.filter(report_name=report_name).exclude(id=new_report.id).delete()
+        response = JsonResponse({"report_content": new_report.report_content}, status=200)
 
     return response
 
